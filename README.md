@@ -101,9 +101,9 @@ VITE_API_URL=http://localhost:8000
 npm run dev
 ```
 
-## 📦 Deploy na Vercel
+## 📦 Deploy
 
-### Frontend
+### Frontend (Vercel)
 
 1. Instale a CLI da Vercel:
 ```bash
@@ -116,15 +116,26 @@ vercel
 ```
 
 3. Configure as variáveis de ambiente na Vercel:
-   - `VITE_API_URL`: URL da sua API backend
+   - `VITE_API_URL`: URL da sua API backend (ex: `https://seu-backend.railway.app`)
 
-### Backend
+### Backend (Railway)
 
-Para o backend, você pode usar:
-- Railway
-- Render
-- Heroku
-- Ou qualquer serviço que suporte Python/FastAPI
+1. Acesse [railway.app](https://railway.app) e faça login
+2. Crie um novo projeto e conecte seu repositório GitHub
+3. **IMPORTANTE**: Configure o **Root Directory** para `backend`:
+   - Vá em Settings → Source → Root Directory
+   - Defina como `backend`
+4. Adicione as variáveis de ambiente:
+   - `DATABASE_URL`: String de conexão PostgreSQL
+   - `SUPABASE_URL`: URL do projeto Supabase
+   - `SUPABASE_KEY`: Chave de API do Supabase
+5. O Railway detectará automaticamente que é um projeto Python e fará o build
+6. Após o deploy, copie a URL gerada (ex: `https://seu-projeto.railway.app`) e use no frontend
+
+**Arquivos de configuração criados:**
+- `Procfile` - Define como iniciar a aplicação
+- `nixpacks.toml` - Configuração do build para Railway
+- `backend/railway.json` - Configuração específica do Railway
 
 ## 🔐 Variáveis de Ambiente
 
