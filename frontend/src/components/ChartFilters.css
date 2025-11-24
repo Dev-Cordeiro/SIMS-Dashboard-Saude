@@ -1,0 +1,380 @@
+.chart-filters {
+  background: white;
+  border-radius: 10px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  margin-bottom: 16px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.chart-filters:hover {
+  border-color: #14b8a6;
+  box-shadow: 0 2px 8px rgba(20, 184, 166, 0.1);
+}
+
+.chart-filters-compact {
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+
+.chart-filters-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.chart-filters-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chart-filters-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.chart-filters-title i {
+  color: #14b8a6;
+  font-size: 13px;
+}
+
+.chart-filters-apply {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  background: #14b8a6;
+  border: 1px solid #14b8a6;
+  border-radius: 6px;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.chart-filters-apply:hover {
+  background: #0d9488;
+  border-color: #0d9488;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(20, 184, 166, 0.3);
+}
+
+.chart-filters-reset {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.chart-filters-reset:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+  color: #475569;
+  transform: translateY(-1px);
+}
+
+.chart-filters-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chart-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chart-filter-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.chart-filter-label i {
+  color: #14b8a6;
+  font-size: 12px;
+}
+
+.chart-filter-year-range {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.chart-filter-month-year {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.chart-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.chart-filter-field label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.chart-filter-select {
+  padding: 7px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #1e293b;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.chart-filter-select:focus {
+  outline: none;
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+}
+
+.chart-filter-select:hover {
+  border-color: #cbd5e1;
+}
+
+.chart-filter-separator {
+  display: flex;
+  align-items: center;
+  padding-bottom: 20px;
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.chart-filter-options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chart-filter-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.chart-filter-option:hover {
+  background: #e0f2fe;
+  border-color: #14b8a6;
+  color: #14b8a6;
+}
+
+.chart-filter-option.active {
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
+  border-color: #14b8a6;
+  color: white;
+}
+
+.chart-filter-option.active:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(20, 184, 166, 0.3);
+}
+
+/* Estilos para seleção de município */
+.chart-filter-municipio-container {
+  position: relative;
+  width: 100%;
+}
+
+.chart-filter-municipio-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.chart-filter-search-icon {
+  position: absolute;
+  left: 10px;
+  color: #64748b;
+  z-index: 1;
+  font-size: 12px;
+}
+
+.chart-filter-municipio-input {
+  width: 100%;
+  padding: 7px 36px 7px 36px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 13px;
+  transition: all 0.2s;
+  background: white;
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.chart-filter-municipio-input:focus {
+  outline: none;
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+}
+
+.chart-filter-municipio-input:hover {
+  border-color: #cbd5e1;
+}
+
+.chart-filter-dropdown-arrow {
+  position: absolute;
+  right: 10px;
+  color: #64748b;
+  cursor: pointer;
+  transition: transform 0.2s;
+  z-index: 1;
+  font-size: 11px;
+}
+
+.chart-filter-dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+.chart-filter-municipio-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  margin-top: 4px;
+  max-height: 300px;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+}
+
+.chart-filter-municipio-option {
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #1e293b;
+}
+
+.chart-filter-municipio-option:hover {
+  background-color: #f1f5f9;
+}
+
+.chart-filter-municipio-option.selected {
+  background-color: #f0fdfa;
+  color: #14b8a6;
+  font-weight: 600;
+}
+
+.chart-filter-municipio-option.no-results {
+  color: #94a3b8;
+  cursor: default;
+  font-style: italic;
+}
+
+.chart-filter-municipio-option.no-results:hover {
+  background-color: transparent;
+}
+
+.chart-filter-municipio-option i {
+  color: #14b8a6;
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .chart-filters {
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .chart-filters-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .chart-filters-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .chart-filter-year-range {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .chart-filter-month-year {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .chart-filter-separator {
+    display: none;
+  }
+
+  .chart-filter-options {
+    flex-direction: column;
+  }
+
+  .chart-filter-option {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .chart-filter-municipio-dropdown {
+    max-height: 250px;
+    z-index: 1001;
+  }
+  
+  .chart-filter-field {
+    width: 100%;
+  }
+  
+  .chart-filter-municipio-container {
+    width: 100%;
+  }
+}
+
