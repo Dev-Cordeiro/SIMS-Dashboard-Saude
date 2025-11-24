@@ -1,13 +1,15 @@
 import { useRef, useState, useEffect } from 'react'
 import { InternacoesPorSexoChart } from '../components/InternacoesPorSexoChart'
-import { exportChartAsPNG, exportDataAsCSV } from '../utils/exportChart'
+import { exportChartAsPNG, exportChartAsPDF, exportDataAsCSV } from '../utils/exportChart'
+import { getChartDescription } from '../utils/chartDescriptions'
 import { formatNumber } from '../utils/formatNumber'
 import { ChartFilters } from '../components/ChartFilters'
 import { api } from '../services/api'
 
 export function InternacoesSexoPage({
   internacoesSexo: initialInternacoesSexo,
-  loading: initialLoading
+  loading: initialLoading,
+  periodoDados = null
 }) {
   const chartRef = useRef(null)
   const [localidades, setLocalidades] = useState([])
@@ -60,6 +62,8 @@ export function InternacoesSexoPage({
 
   const aplicarFiltros = async () => {
     setLoading(true)
+    // Limpar resultados anteriores antes de aplicar novos filtros
+    setInternacoesSexo([])
     try {
       if (selectedMunicipio !== 'all') {
         const params = { params: { id_localidade: selectedMunicipio } }
@@ -76,7 +80,6 @@ export function InternacoesSexoPage({
   }
 
   const handleExportPNG = () => {
-    // Preparar informações dos filtros aplicados
     const filtrosInfo = []
     if (selectedMunicipio !== 'all') {
       const municipio = localidades.find(l => l.id_localidade === selectedMunicipio)
@@ -84,11 +87,25 @@ export function InternacoesSexoPage({
         filtrosInfo.push(`Município: ${municipio.municipio} - ${municipio.uf}`)
       }
     }
-    exportChartAsPNG(chartRef, 'internacoes-sexo', filtrosInfo)
+    const description = getChartDescription('internacoes-sexo')
+    exportChartAsPNG(chartRef, 'internacoes-sexo', filtrosInfo, description)
+  }
+
+  const handleExportPDF = () => {
+    const filtrosInfo = []
+    if (selectedMunicipio !== 'all') {
+      const municipio = localidades.find(l => l.id_localidade === selectedMunicipio)
+      if (municipio) {
+        filtrosInfo.push(`Município: ${municipio.municipio} - ${municipio.uf}`)
+      }
+    }
+    const description = getChartDescription('internacoes-sexo')
+    exportChartAsPDF(chartRef, 'internacoes-sexo', filtrosInfo, description)
   }
 
   const handleExportCSV = () => {
-    exportDataAsCSV(internacoesSexo, 'internacoes-sexo')
+    const description = getChartDescription('internacoes-sexo')
+    exportDataAsCSV(internacoesSexo, 'internacoes-sexo', description)
   }
 
   const totalInternacoes = internacoesSexo.reduce((sum, item) => sum + (item.total_internacoes || 0), 0)
@@ -131,6 +148,7 @@ export function InternacoesSexoPage({
           showMunicipio={true}
           localidades={localidades}
           initialMunicipio={selectedMunicipio}
+          maxAvailableYear={periodoDados?.ano_fim || null}
         />
 
         {/* Cards de Estatísticas Resumidas */}
@@ -209,6 +227,10 @@ export function InternacoesSexoPage({
                 <button className="export-button" onClick={handleExportPNG} title="Exportar como PNG">
                   <i className="fas fa-download"></i>
                   <span>PNG</span>
+                </button>
+                <button className="export-button" onClick={handleExportPDF} title="Exportar como PDF">
+                  <i className="fas fa-file-pdf"></i>
+                  <span>PDF</span>
                 </button>
                 <button className="export-button" onClick={handleExportCSV} title="Exportar dados como CSV">
                   <i className="fas fa-file-csv"></i>

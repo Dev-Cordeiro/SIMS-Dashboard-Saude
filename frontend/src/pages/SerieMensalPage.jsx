@@ -1,13 +1,15 @@
 import { useRef, useState, useEffect } from 'react'
 import { MonthlySeriesChart } from '../components/MonthlySeriesChart'
-import { exportChartAsPNG, exportDataAsCSV } from '../utils/exportChart'
+import { exportChartAsPNG, exportChartAsPDF, exportDataAsCSV } from '../utils/exportChart'
+import { getChartDescription } from '../utils/chartDescriptions'
 import { formatNumber } from '../utils/formatNumber'
 import { ChartFilters } from '../components/ChartFilters'
 import { api } from '../services/api'
 
 export function SerieMensalPage({
   seriesMensal: initialSeriesMensal,
-  loading: initialLoading
+  loading: initialLoading,
+  periodoDados = null
 }) {
   const chartRef = useRef(null)
   const [localidades, setLocalidades] = useState([])
@@ -86,40 +88,28 @@ export function SerieMensalPage({
 
   const aplicarFiltros = async () => {
     setLoading(true)
+    // Limpar resultados anteriores antes de aplicar novos filtros
+    setSeriesMensal([])
     try {
+      const params = {}
       if (selectedMunicipio !== 'all') {
-        const params = {}
-        if (selectedMunicipio !== 'all') {
-          params.id_localidade = selectedMunicipio
-        }
-        if (yearStart) {
-          params.ano_inicio = yearStart
-        }
-        if (yearEnd) {
-          params.ano_fim = yearEnd
-        }
-        if (selectedMonth) {
-          params.mes = selectedMonth
-        }
-        
+        params.id_localidade = selectedMunicipio
+      }
+      if (yearStart) {
+        params.ano_inicio = yearStart
+      }
+      if (yearEnd) {
+        params.ano_fim = yearEnd
+      }
+      if (selectedMonth) {
+        params.mes = selectedMonth
+      }
+      
+      if (selectedMunicipio !== 'all' || yearStart || yearEnd || selectedMonth) {
         const res = await api.get('/api/series/mensal', { params })
         setSeriesMensal(res.data || [])
       } else {
-        let dadosFiltrados = [...dadosCompletos]
-
-        if (yearStart) {
-          dadosFiltrados = dadosFiltrados.filter(item => item.ano >= yearStart)
-        }
-
-        if (yearEnd) {
-          dadosFiltrados = dadosFiltrados.filter(item => item.ano <= yearEnd)
-        }
-
-        if (selectedMonth) {
-          dadosFiltrados = dadosFiltrados.filter(item => item.mes === selectedMonth)
-        }
-
-        setSeriesMensal(dadosFiltrados)
+        setSeriesMensal(dadosCompletos)
       }
     } catch (error) {
       setSeriesMensal([])
@@ -129,7 +119,6 @@ export function SerieMensalPage({
   }
 
   const handleExportPNG = () => {
-    // Preparar informações dos filtros aplicados
     const filtrosInfo = []
     if (selectedMunicipio !== 'all') {
       const municipio = localidades.find(l => l.id_localidade === selectedMunicipio)
@@ -145,12 +134,33 @@ export function SerieMensalPage({
                      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
       filtrosInfo.push(`Mês: ${meses[selectedMonth]}`)
     }
-    
-    exportChartAsPNG(chartRef, 'serie-mensal', filtrosInfo)
+    const description = getChartDescription('serie-mensal')
+    exportChartAsPNG(chartRef, 'serie-mensal', filtrosInfo, description)
+  }
+
+  const handleExportPDF = () => {
+    const filtrosInfo = []
+    if (selectedMunicipio !== 'all') {
+      const municipio = localidades.find(l => l.id_localidade === selectedMunicipio)
+      if (municipio) {
+        filtrosInfo.push(`Município: ${municipio.municipio} - ${municipio.uf}`)
+      }
+    }
+    if (yearStart && yearEnd) {
+      filtrosInfo.push(`Período: ${yearStart} a ${yearEnd}`)
+    }
+    if (selectedMonth) {
+      const meses = ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+      filtrosInfo.push(`Mês: ${meses[selectedMonth]}`)
+    }
+    const description = getChartDescription('serie-mensal')
+    exportChartAsPDF(chartRef, 'serie-mensal', filtrosInfo, description)
   }
 
   const handleExportCSV = () => {
-    exportDataAsCSV(seriesMensal, 'serie-mensal')
+    const description = getChartDescription('serie-mensal')
+    exportDataAsCSV(seriesMensal, 'serie-mensal', description)
   }
 
   const totalInternacoes = seriesMensal.reduce((sum, item) => sum + (item.internacoes || 0), 0)
@@ -205,6 +215,7 @@ export function SerieMensalPage({
           initialYearStart={yearStart || minYear}
           initialYearEnd={yearEnd || maxYear}
           availableYears={availableYears.length > 0 ? availableYears : null}
+          maxAvailableYear={periodoDados?.ano_fim || maxYear}
         />
 
         {/* Cards de Estatísticas Resumidas */}
@@ -214,8 +225,10 @@ export function SerieMensalPage({
               <div className="page-stat-icon">
                 <i className="fas fa-calendar-alt"></i>
               </div>
-              <div className="page-stat-label">Períodos Analisados</div>
-              <div className="page-stat-value">{seriesMensal.length}</div>
+              <div className="page-stat-label">Anos Analisados</div>
+              <div className="page-stat-value">
+                {new Set(seriesMensal.map(item => item.ano)).size}
+              </div>
             </div>
             <div className="page-stat-card">
               <div className="page-stat-icon">
@@ -275,6 +288,10 @@ export function SerieMensalPage({
                 <button className="export-button" onClick={handleExportPNG} title="Exportar como PNG">
                   <i className="fas fa-download"></i>
                   <span>PNG</span>
+                </button>
+                <button className="export-button" onClick={handleExportPDF} title="Exportar como PDF">
+                  <i className="fas fa-file-pdf"></i>
+                  <span>PDF</span>
                 </button>
                 <button className="export-button" onClick={handleExportCSV} title="Exportar dados como CSV">
                   <i className="fas fa-file-csv"></i>

@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
+import { normalizeText } from '../utils/exportChart'
 import './Filters.css'
 
 export function Filters({
@@ -38,13 +39,14 @@ export function Filters({
 
   const filteredLocalidades = localidades.filter((loc) => {
     if (!loc) return false
-    const searchLower = searchTerm.toLowerCase()
-    const municipio = loc.municipio || ''
-    const uf = loc.uf || ''
+    const searchNormalized = normalizeText(searchTerm)
+    const municipio = normalizeText(loc.municipio || '')
+    const uf = normalizeText(loc.uf || '')
+    const fullName = normalizeText(`${loc.municipio || ''} - ${loc.uf || ''}`)
     return (
-      municipio.toLowerCase().includes(searchLower) ||
-      uf.toLowerCase().includes(searchLower) ||
-      `${municipio} - ${uf}`.toLowerCase().includes(searchLower)
+      municipio.includes(searchNormalized) ||
+      uf.includes(searchNormalized) ||
+      fullName.includes(searchNormalized)
     )
   })
 

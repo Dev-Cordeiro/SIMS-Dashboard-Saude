@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import './Modal.css'
 
-export function Modal({ isOpen, onClose, title, children }) {
+export function Modal({ isOpen, onClose, title, children, showCloseButton = true }) {
   useEffect(() => {
     const handleEscape = (event) => {
       if (event.key === 'Escape' && isOpen) {
@@ -27,9 +27,11 @@ export function Modal({ isOpen, onClose, title, children }) {
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3 className="modal-title">{title}</h3>
-          <button className="modal-close" onClick={onClose} aria-label="Fechar">
-            <i className="fas fa-times"></i>
-          </button>
+          {showCloseButton && (
+            <button className="modal-close" onClick={onClose} aria-label="Fechar">
+              <i className="fas fa-times"></i>
+            </button>
+          )}
         </div>
         <div className="modal-body">
           {children}

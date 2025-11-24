@@ -109,6 +109,13 @@ class SignUpRequest(BaseModel):
     password: str
     name: Optional[str] = None
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    password: str
+
 class ProfileUpdate(BaseModel):
     name: Optional[str] = None
     phone: Optional[str] = None
@@ -253,6 +260,51 @@ async def get_profile(current_user = Depends(get_current_user)):
         return {"success": True, "profile": None}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/auth/forgot-password")
+async def forgot_password(data: ForgotPasswordRequest):
+    """
+    Endpoint para solicitar recuperação de senha.
+    Envia email com link para redefinir senha.
+    """
+    try:
+        import os
+        frontend_url = os.getenv("FRONTEND_URL", "https://sims-dashboard-saude.vercel.app")
+        redirect_url = f"{frontend_url}/reset-password"
+        
+        response = supabase.auth.reset_password_for_email(
+            data.email,
+            {
+                "redirect_to": redirect_url
+            }
+        )
+        
+        # O Supabase sempre retorna sucesso (por segurança) mesmo se o email não existir
+        return {
+            "success": True,
+            "message": "Se o email estiver cadastrado, você receberá um link de recuperação."
+        }
+    except Exception as e:
+        error_msg = str(e)
+        # Por segurança, sempre retornamos sucesso
+        return {
+            "success": True,
+            "message": "Se o email estiver cadastrado, você receberá um link de recuperação."
+        }
+
+@app.post("/api/auth/reset-password")
+async def reset_password(data: ResetPasswordRequest):
+    """
+    Endpoint para redefinir senha usando o token do email.
+    NOTA: Este endpoint não é mais necessário, pois o frontend faz o reset
+    diretamente com o Supabase. Mantido para compatibilidade.
+    """
+    # O reset de senha agora é feito diretamente no frontend usando o Supabase client
+    # O token vem no hash da URL e é processado pelo componente ResetPassword
+    return {
+        "success": False,
+        "error": "Este endpoint não é mais usado. O reset de senha é feito diretamente no frontend."
+    }
 
 @app.put("/api/user/profile")
 async def update_profile(profile_data: ProfileUpdate, current_user = Depends(get_current_user)):

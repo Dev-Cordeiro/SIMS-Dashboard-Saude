@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react'
 import { InternacoesPorFaixaChart } from '../components/InternacoesPorFaixaChart'
-import { exportChartAsPNG, exportDataAsCSV } from '../utils/exportChart'
+import { exportChartAsPNG, exportChartAsPDF, exportDataAsCSV } from '../utils/exportChart'
+import { getChartDescription } from '../utils/chartDescriptions'
 import { formatNumber } from '../utils/formatNumber'
 import { ChartFilters } from '../components/ChartFilters'
 import { api } from '../services/api'
@@ -8,7 +9,8 @@ import './InternacoesFaixaPage.css'
 
 export function InternacoesFaixaPage({
   internacoesFaixa: initialInternacoesFaixa,
-  loading: initialLoading
+  loading: initialLoading,
+  periodoDados = null
 }) {
   const chartRef = useRef(null)
   const [localidades, setLocalidades] = useState([])
@@ -61,6 +63,8 @@ export function InternacoesFaixaPage({
 
   const aplicarFiltros = async () => {
     setLoading(true)
+    // Limpar resultados anteriores antes de aplicar novos filtros
+    setInternacoesFaixa([])
     try {
       if (selectedMunicipio !== 'all') {
         const params = { params: { id_localidade: selectedMunicipio } }
@@ -77,7 +81,6 @@ export function InternacoesFaixaPage({
   }
 
   const handleExportPNG = () => {
-    // Preparar informações dos filtros aplicados
     const filtrosInfo = []
     if (selectedMunicipio !== 'all') {
       const municipio = localidades.find(l => l.id_localidade === selectedMunicipio)
@@ -85,11 +88,25 @@ export function InternacoesFaixaPage({
         filtrosInfo.push(`Município: ${municipio.municipio} - ${municipio.uf}`)
       }
     }
-    exportChartAsPNG(chartRef, 'internacoes-faixa-etaria', filtrosInfo)
+    const description = getChartDescription('internacoes-faixa-etaria')
+    exportChartAsPNG(chartRef, 'internacoes-faixa-etaria', filtrosInfo, description)
+  }
+
+  const handleExportPDF = () => {
+    const filtrosInfo = []
+    if (selectedMunicipio !== 'all') {
+      const municipio = localidades.find(l => l.id_localidade === selectedMunicipio)
+      if (municipio) {
+        filtrosInfo.push(`Município: ${municipio.municipio} - ${municipio.uf}`)
+      }
+    }
+    const description = getChartDescription('internacoes-faixa-etaria')
+    exportChartAsPDF(chartRef, 'internacoes-faixa-etaria', filtrosInfo, description)
   }
 
   const handleExportCSV = () => {
-    exportDataAsCSV(internacoesFaixa, 'internacoes-faixa-etaria')
+    const description = getChartDescription('internacoes-faixa-etaria')
+    exportDataAsCSV(internacoesFaixa, 'internacoes-faixa-etaria', description)
   }
 
   const totalInternacoes = internacoesFaixa?.reduce((sum, item) => sum + (item.total_internacoes || 0), 0) || 0
@@ -133,6 +150,7 @@ export function InternacoesFaixaPage({
           showMunicipio={true}
           localidades={localidades}
           initialMunicipio={selectedMunicipio}
+          maxAvailableYear={periodoDados?.ano_fim || null}
         />
 
         {/* Cards de Estatísticas Resumidas */}
@@ -209,6 +227,14 @@ export function InternacoesFaixaPage({
                 >
                   <i className="fas fa-download"></i>
                   <span>PNG</span>
+                </button>
+                <button
+                  className="export-button"
+                  onClick={handleExportPDF}
+                  title="Exportar como PDF"
+                >
+                  <i className="fas fa-file-pdf"></i>
+                  <span>PDF</span>
                 </button>
                 <button
                   className="export-button"

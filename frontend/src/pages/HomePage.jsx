@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { StatCard } from '../components/StatCard'
-import { BrasilMapReal } from '../components/BrasilMapReal'
+import { BrasilMapSimple } from '../components/BrasilMapSimple'
 import { InternacoesCid10HomeChart } from '../components/InternacoesCid10HomeChart'
 import { ObitosPorCidCapChart } from '../components/ObitosPorCidCapChart'
 import { formatNumber } from '../utils/formatNumber'
@@ -129,7 +129,7 @@ export function HomePage({
                     <span>Dados referentes ao período: <strong>{formatarPeriodo()}</strong></span>
                   </div>
                 )}
-                <BrasilMapReal internacoesCid={internacoesCid} />
+                <BrasilMapSimple internacoesCid={internacoesCid} />
               </div>
             </div>
 

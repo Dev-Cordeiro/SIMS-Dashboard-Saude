@@ -1,13 +1,15 @@
 import { useRef, useState, useEffect } from 'react'
 import { ObitosPorRacaChart } from '../components/ObitosPorRacaChart'
-import { exportChartAsPNG, exportDataAsCSV } from '../utils/exportChart'
+import { exportChartAsPNG, exportChartAsPDF, exportDataAsCSV } from '../utils/exportChart'
+import { getChartDescription } from '../utils/chartDescriptions'
 import { formatNumber } from '../utils/formatNumber'
 import { ChartFilters } from '../components/ChartFilters'
 import { api } from '../services/api'
 
 export function ObitosRacaPage({
   obitosRaca: initialObitosRaca,
-  loading: initialLoading
+  loading: initialLoading,
+  periodoDados = null
 }) {
   const chartRef = useRef(null)
   const [localidades, setLocalidades] = useState([])
@@ -60,6 +62,8 @@ export function ObitosRacaPage({
 
   const aplicarFiltros = async () => {
     setLoading(true)
+    // Limpar resultados anteriores antes de aplicar novos filtros
+    setObitosRaca([])
     try {
       if (selectedMunicipio !== 'all') {
         const params = { params: { id_localidade: selectedMunicipio } }
@@ -76,7 +80,6 @@ export function ObitosRacaPage({
   }
 
   const handleExportPNG = () => {
-    // Preparar informações dos filtros aplicados
     const filtrosInfo = []
     if (selectedMunicipio !== 'all') {
       const municipio = localidades.find(l => l.id_localidade === selectedMunicipio)
@@ -84,11 +87,25 @@ export function ObitosRacaPage({
         filtrosInfo.push(`Município: ${municipio.municipio} - ${municipio.uf}`)
       }
     }
-    exportChartAsPNG(chartRef, 'obitos-raca', filtrosInfo)
+    const description = getChartDescription('obitos-raca')
+    exportChartAsPNG(chartRef, 'obitos-raca', filtrosInfo, description)
+  }
+
+  const handleExportPDF = () => {
+    const filtrosInfo = []
+    if (selectedMunicipio !== 'all') {
+      const municipio = localidades.find(l => l.id_localidade === selectedMunicipio)
+      if (municipio) {
+        filtrosInfo.push(`Município: ${municipio.municipio} - ${municipio.uf}`)
+      }
+    }
+    const description = getChartDescription('obitos-raca')
+    exportChartAsPDF(chartRef, 'obitos-raca', filtrosInfo, description)
   }
 
   const handleExportCSV = () => {
-    exportDataAsCSV(obitosRaca, 'obitos-raca')
+    const description = getChartDescription('obitos-raca')
+    exportDataAsCSV(obitosRaca, 'obitos-raca', description)
   }
 
   const totalObitos = obitosRaca.reduce((sum, item) => sum + (item.total_obitos || 0), 0)
@@ -133,6 +150,7 @@ export function ObitosRacaPage({
           showMunicipio={true}
           localidades={localidades}
           initialMunicipio={selectedMunicipio}
+          maxAvailableYear={periodoDados?.ano_fim || null}
         />
 
         {/* Cards de Estatísticas Resumidas */}
@@ -203,6 +221,10 @@ export function ObitosRacaPage({
                 <button className="export-button" onClick={handleExportPNG} title="Exportar como PNG">
                   <i className="fas fa-download"></i>
                   <span>PNG</span>
+                </button>
+                <button className="export-button" onClick={handleExportPDF} title="Exportar como PDF">
+                  <i className="fas fa-file-pdf"></i>
+                  <span>PDF</span>
                 </button>
                 <button className="export-button" onClick={handleExportCSV} title="Exportar dados como CSV">
                   <i className="fas fa-file-csv"></i>

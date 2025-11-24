@@ -174,10 +174,17 @@ export function SignUp() {
 
             <button 
               type="submit" 
-              className="signup-button"
+              className={`signup-button ${loading ? 'loading' : ''}`}
               disabled={loading}
             >
-              {loading ? 'Criando conta...' : 'Criar Conta'}
+              {loading ? (
+                <>
+                  <span className="button-spinner"></span>
+                  Criando conta...
+                </>
+              ) : (
+                'Criar Conta'
+              )}
             </button>
 
             <div className="signup-footer">

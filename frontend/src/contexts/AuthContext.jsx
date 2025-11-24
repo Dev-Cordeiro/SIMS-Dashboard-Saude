@@ -55,7 +55,31 @@ export function AuthProvider({ children }) {
         }
       }
       
-      const errorMessage = error.response?.data?.detail || error.message || 'Erro ao fazer login'
+      // Capturar mensagens específicas do backend
+      let errorMessage = 'Email ou senha incorretos'
+      
+      if (error.response?.status === 401) {
+        // Erro de autenticação
+        const detail = error.response?.data?.detail || ''
+        
+        if (detail.includes('Email ou senha incorretos') || 
+            detail.includes('Credenciais inválidas') ||
+            detail.includes('Invalid login credentials') ||
+            detail.includes('invalid_credentials')) {
+          errorMessage = 'Email ou senha incorretos. Verifique suas credenciais e tente novamente.'
+        } else if (detail.includes('Email não confirmado') || 
+                   detail.includes('Email not confirmed') ||
+                   detail.includes('email_not_confirmed')) {
+          errorMessage = 'Email não confirmado. Verifique sua caixa de entrada e confirme seu email antes de fazer login.'
+        } else if (detail) {
+          errorMessage = detail
+        }
+      } else if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail
+      } else if (error.message) {
+        errorMessage = error.message
+      }
+      
       return { success: false, error: errorMessage }
     }
   }

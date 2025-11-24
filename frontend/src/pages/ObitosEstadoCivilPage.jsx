@@ -1,13 +1,15 @@
 import { useRef, useState, useEffect } from 'react'
 import { ObitosPorEstadoCivilChart } from '../components/ObitosPorEstadoCivilChart'
-import { exportChartAsPNG, exportDataAsCSV } from '../utils/exportChart'
+import { exportChartAsPNG, exportChartAsPDF, exportDataAsCSV } from '../utils/exportChart'
+import { getChartDescription } from '../utils/chartDescriptions'
 import { formatNumber } from '../utils/formatNumber'
 import { ChartFilters } from '../components/ChartFilters'
 import { api } from '../services/api'
 
 export function ObitosEstadoCivilPage({
   obitosEstadoCivil: initialObitosEstadoCivil,
-  loading: initialLoading
+  loading: initialLoading,
+  periodoDados = null
 }) {
   const chartRef = useRef(null)
   const [localidades, setLocalidades] = useState([])
@@ -60,6 +62,8 @@ export function ObitosEstadoCivilPage({
 
   const aplicarFiltros = async () => {
     setLoading(true)
+    // Limpar resultados anteriores antes de aplicar novos filtros
+    setObitosEstadoCivil([])
     try {
       if (selectedMunicipio !== 'all') {
         const params = { params: { id_localidade: selectedMunicipio } }
@@ -76,7 +80,6 @@ export function ObitosEstadoCivilPage({
   }
 
   const handleExportPNG = () => {
-    // Preparar informações dos filtros aplicados
     const filtrosInfo = []
     if (selectedMunicipio !== 'all') {
       const municipio = localidades.find(l => l.id_localidade === selectedMunicipio)
@@ -84,11 +87,25 @@ export function ObitosEstadoCivilPage({
         filtrosInfo.push(`Município: ${municipio.municipio} - ${municipio.uf}`)
       }
     }
-    exportChartAsPNG(chartRef, 'obitos-estado-civil', filtrosInfo)
+    const description = getChartDescription('obitos-estado-civil')
+    exportChartAsPNG(chartRef, 'obitos-estado-civil', filtrosInfo, description)
+  }
+
+  const handleExportPDF = () => {
+    const filtrosInfo = []
+    if (selectedMunicipio !== 'all') {
+      const municipio = localidades.find(l => l.id_localidade === selectedMunicipio)
+      if (municipio) {
+        filtrosInfo.push(`Município: ${municipio.municipio} - ${municipio.uf}`)
+      }
+    }
+    const description = getChartDescription('obitos-estado-civil')
+    exportChartAsPDF(chartRef, 'obitos-estado-civil', filtrosInfo, description)
   }
 
   const handleExportCSV = () => {
-    exportDataAsCSV(obitosEstadoCivil, 'obitos-estado-civil')
+    const description = getChartDescription('obitos-estado-civil')
+    exportDataAsCSV(obitosEstadoCivil, 'obitos-estado-civil', description)
   }
 
   const totalObitos = obitosEstadoCivil?.reduce((sum, item) => sum + (item.total_obitos || 0), 0) || 0
@@ -135,6 +152,7 @@ export function ObitosEstadoCivilPage({
           showMunicipio={true}
           localidades={localidades}
           initialMunicipio={selectedMunicipio}
+          maxAvailableYear={periodoDados?.ano_fim || null}
         />
 
         {/* Cards de Estatísticas Resumidas */}
@@ -209,6 +227,14 @@ export function ObitosEstadoCivilPage({
                 >
                   <i className="fas fa-download"></i>
                   <span>PNG</span>
+                </button>
+                <button
+                  className="export-button"
+                  onClick={handleExportPDF}
+                  title="Exportar como PDF"
+                >
+                  <i className="fas fa-file-pdf"></i>
+                  <span>PDF</span>
                 </button>
                 <button
                   className="export-button"

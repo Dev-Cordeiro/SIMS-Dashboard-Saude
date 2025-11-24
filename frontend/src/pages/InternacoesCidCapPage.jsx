@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { InternacoesPorCidCapChart } from '../components/InternacoesPorCidCapChart'
-import { exportChartAsPNG, exportDataAsCSV } from '../utils/exportChart'
+import { exportChartAsPNG, exportChartAsPDF, exportDataAsCSV } from '../utils/exportChart'
+import { getChartDescription } from '../utils/chartDescriptions'
 import { formatNumber } from '../utils/formatNumber'
 import { ChartFilters } from '../components/ChartFilters'
 import { api } from '../services/api'
@@ -9,7 +10,8 @@ import './InternacoesCidCapPage.css'
 
 export function InternacoesCidCapPage({
   internacoesCid: initialInternacoesCid,
-  loading: initialLoading
+  loading: initialLoading,
+  periodoDados = null
 }) {
   const chartRef = useRef(null)
   const [drillDown, setDrillDown] = useState(null)
@@ -65,26 +67,26 @@ export function InternacoesCidCapPage({
 
   const aplicarFiltros = async () => {
     setLoading(true)
+    // Limpar resultados anteriores antes de aplicar novos filtros
+    setInternacoesCid([])
+    setDrillDown(null)
     try {
-      if (selectedMunicipio !== 'all' || selectedYear || selectedMonth) {
-        const params = {}
-        if (selectedMunicipio !== 'all') {
-          params.id_localidade = selectedMunicipio
-        }
-        if (selectedYear) {
-          params.ano = selectedYear
-        }
-        if (selectedMonth) {
-          params.mes = selectedMonth
-        }
-        
-        const res = await api.get('/api/internacoes/cid-cap', { params })
-        setInternacoesCid(res.data || [])
-      } else {
-        setInternacoesCid(dadosCompletos)
+      const params = {}
+      if (selectedMunicipio !== 'all') {
+        params.id_localidade = selectedMunicipio
       }
-      setDrillDown(null)
+      if (selectedYear) {
+        params.ano = selectedYear
+      }
+      if (selectedMonth) {
+        params.mes = selectedMonth
+      }
+      
+      // Sempre fazer a requisição, mesmo sem filtros, para garantir dados atualizados
+      const res = await api.get('/api/internacoes/cid-cap', { params })
+      setInternacoesCid(res.data || [])
     } catch (error) {
+      console.error('Erro ao aplicar filtros:', error)
       setInternacoesCid([])
     } finally {
       setLoading(false)
@@ -92,7 +94,6 @@ export function InternacoesCidCapPage({
   }
 
   const handleExportPNG = () => {
-    // Preparar informações dos filtros aplicados
     const filtrosInfo = []
     if (selectedMunicipio !== 'all') {
       const municipio = localidades.find(l => l.id_localidade === selectedMunicipio)
@@ -111,11 +112,36 @@ export function InternacoesCidCapPage({
     if (drillDown) {
       filtrosInfo.push(`Capítulo: ${drillDown.capitulo_cod} - ${drillDown.capitulo_nome}`)
     }
-    exportChartAsPNG(chartRef, 'internacoes-cid10-capitulo', filtrosInfo)
+    const description = getChartDescription('internacoes-cid10-capitulo')
+    exportChartAsPNG(chartRef, 'internacoes-cid10-capitulo', filtrosInfo, description)
+  }
+
+  const handleExportPDF = () => {
+    const filtrosInfo = []
+    if (selectedMunicipio !== 'all') {
+      const municipio = localidades.find(l => l.id_localidade === selectedMunicipio)
+      if (municipio) {
+        filtrosInfo.push(`Município: ${municipio.municipio} - ${municipio.uf}`)
+      }
+    }
+    if (selectedYear) {
+      filtrosInfo.push(`Ano: ${selectedYear}`)
+    }
+    if (selectedMonth) {
+      const meses = ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+      filtrosInfo.push(`Mês: ${meses[selectedMonth]}`)
+    }
+    if (drillDown) {
+      filtrosInfo.push(`Capítulo: ${drillDown.capitulo_cod} - ${drillDown.capitulo_nome}`)
+    }
+    const description = getChartDescription('internacoes-cid10-capitulo')
+    exportChartAsPDF(chartRef, 'internacoes-cid10-capitulo', filtrosInfo, description)
   }
 
   const handleExportCSV = () => {
-    exportDataAsCSV(internacoesCid, 'internacoes-cid10-capitulo')
+    const description = getChartDescription('internacoes-cid10-capitulo')
+    exportDataAsCSV(internacoesCid, 'internacoes-cid10-capitulo', description)
   }
 
   return (
@@ -161,6 +187,7 @@ export function InternacoesCidCapPage({
           initialMunicipio={selectedMunicipio}
           initialYear={selectedYear}
           initialMonth={selectedMonth}
+          maxAvailableYear={periodoDados?.ano_fim || null}
         />
 
         {/* Cards de Estatísticas Resumidas */}
@@ -238,6 +265,14 @@ export function InternacoesCidCapPage({
                 >
                   <i className="fas fa-download"></i>
                   <span>PNG</span>
+                </button>
+                <button
+                  className="export-button"
+                  onClick={handleExportPDF}
+                  title="Exportar como PDF"
+                >
+                  <i className="fas fa-file-pdf"></i>
+                  <span>PDF</span>
                 </button>
                 <button
                   className="export-button"

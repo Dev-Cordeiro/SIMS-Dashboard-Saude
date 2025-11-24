@@ -1,13 +1,15 @@
 import { useRef, useState, useEffect } from 'react'
 import { ObitosPorLocalChart } from '../components/ObitosPorLocalChart'
-import { exportChartAsPNG, exportDataAsCSV } from '../utils/exportChart'
+import { exportChartAsPNG, exportChartAsPDF, exportDataAsCSV } from '../utils/exportChart'
+import { getChartDescription } from '../utils/chartDescriptions'
 import { formatNumber } from '../utils/formatNumber'
 import { ChartFilters } from '../components/ChartFilters'
 import { api } from '../services/api'
 
 export function ObitosLocalPage({
   obitosLocal: initialObitosLocal,
-  loading: initialLoading
+  loading: initialLoading,
+  periodoDados = null
 }) {
   const chartRef = useRef(null)
   const [localidades, setLocalidades] = useState([])
@@ -60,6 +62,8 @@ export function ObitosLocalPage({
 
   const aplicarFiltros = async () => {
     setLoading(true)
+    // Limpar resultados anteriores antes de aplicar novos filtros
+    setObitosLocal([])
     try {
       if (selectedMunicipio !== 'all') {
         const params = { params: { id_localidade: selectedMunicipio } }
@@ -76,7 +80,6 @@ export function ObitosLocalPage({
   }
 
   const handleExportPNG = () => {
-    // Preparar informações dos filtros aplicados
     const filtrosInfo = []
     if (selectedMunicipio !== 'all') {
       const municipio = localidades.find(l => l.id_localidade === selectedMunicipio)
@@ -84,11 +87,25 @@ export function ObitosLocalPage({
         filtrosInfo.push(`Município: ${municipio.municipio} - ${municipio.uf}`)
       }
     }
-    exportChartAsPNG(chartRef, 'obitos-local-ocorrencia', filtrosInfo)
+    const description = getChartDescription('obitos-local-ocorrencia')
+    exportChartAsPNG(chartRef, 'obitos-local-ocorrencia', filtrosInfo, description)
+  }
+
+  const handleExportPDF = () => {
+    const filtrosInfo = []
+    if (selectedMunicipio !== 'all') {
+      const municipio = localidades.find(l => l.id_localidade === selectedMunicipio)
+      if (municipio) {
+        filtrosInfo.push(`Município: ${municipio.municipio} - ${municipio.uf}`)
+      }
+    }
+    const description = getChartDescription('obitos-local-ocorrencia')
+    exportChartAsPDF(chartRef, 'obitos-local-ocorrencia', filtrosInfo, description)
   }
 
   const handleExportCSV = () => {
-    exportDataAsCSV(obitosLocal, 'obitos-local-ocorrencia')
+    const description = getChartDescription('obitos-local-ocorrencia')
+    exportDataAsCSV(obitosLocal, 'obitos-local-ocorrencia', description)
   }
 
   const totalObitos = obitosLocal?.reduce((sum, item) => sum + (item.total_obitos || 0), 0) || 0
@@ -135,6 +152,7 @@ export function ObitosLocalPage({
           showMunicipio={true}
           localidades={localidades}
           initialMunicipio={selectedMunicipio}
+          maxAvailableYear={periodoDados?.ano_fim || null}
         />
 
         {/* Cards de Estatísticas Resumidas */}
@@ -209,6 +227,14 @@ export function ObitosLocalPage({
                 >
                   <i className="fas fa-download"></i>
                   <span>PNG</span>
+                </button>
+                <button
+                  className="export-button"
+                  onClick={handleExportPDF}
+                  title="Exportar como PDF"
+                >
+                  <i className="fas fa-file-pdf"></i>
+                  <span>PDF</span>
                 </button>
                 <button
                   className="export-button"

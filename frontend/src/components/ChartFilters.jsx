@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { normalizeText } from '../utils/exportChart'
 import './ChartFilters.css'
 
 export function ChartFilters({
@@ -15,6 +16,7 @@ export function ChartFilters({
   initialMonth = null,
   initialMunicipio = 'all',
   availableYears = null,
+  maxAvailableYear = null, // Ano máximo disponível nos dados
   compact = false
 }) {
   const currentYear = new Date().getFullYear()
@@ -24,11 +26,11 @@ export function ChartFilters({
     : Array.from({ length: 20 }, (_, i) => currentYear - i)
   
   const minAvailableYear = years.length > 0 ? Math.min(...years) : currentYear - 20
-  const maxAvailableYear = years.length > 0 ? Math.max(...years) : currentYear
+  const maxYearLimit = maxAvailableYear || (years.length > 0 ? Math.max(...years) : currentYear)
   
   const [yearStart, setYearStart] = useState(initialYearStart || minAvailableYear)
-  const [yearEnd, setYearEnd] = useState(initialYearEnd || maxAvailableYear)
-  const [selectedYear, setSelectedYear] = useState(initialYear || maxAvailableYear)
+  const [yearEnd, setYearEnd] = useState(initialYearEnd || maxYearLimit)
+  const [selectedYear, setSelectedYear] = useState(initialYear || maxYearLimit)
   const [selectedMonth, setSelectedMonth] = useState(initialMonth || null)
   const [selectedMunicipio, setSelectedMunicipio] = useState(initialMunicipio)
   const [searchTerm, setSearchTerm] = useState('')
@@ -66,13 +68,14 @@ export function ChartFilters({
 
   const filteredLocalidades = localidades.filter((loc) => {
     if (!loc) return false
-    const searchLower = searchTerm.toLowerCase()
-    const municipio = loc.municipio || ''
-    const uf = loc.uf || ''
+    const searchNormalized = normalizeText(searchTerm)
+    const municipio = normalizeText(loc.municipio || '')
+    const uf = normalizeText(loc.uf || '')
+    const fullName = normalizeText(`${loc.municipio || ''} - ${loc.uf || ''}`)
     return (
-      municipio.toLowerCase().includes(searchLower) ||
-      uf.toLowerCase().includes(searchLower) ||
-      `${municipio} - ${uf}`.toLowerCase().includes(searchLower)
+      municipio.includes(searchNormalized) ||
+      uf.includes(searchNormalized) ||
+      fullName.includes(searchNormalized)
     )
   })
 
@@ -101,7 +104,9 @@ export function ChartFilters({
 
   const handleYearEndChange = (e) => {
     const newEnd = parseInt(e.target.value)
-    setYearEnd(newEnd)
+    // Limitar ao máximo disponível
+    const finalEnd = newEnd > maxYearLimit ? maxYearLimit : newEnd
+    setYearEnd(finalEnd)
   }
 
   const handleYearChange = (e) => {
@@ -135,13 +140,15 @@ export function ChartFilters({
 
   const handleReset = () => {
     const defaultStart = minAvailableYear
-    const defaultEnd = maxAvailableYear
-    const defaultYear = maxAvailableYear
+    const defaultEnd = maxYearLimit
+    const defaultYear = maxYearLimit
     setYearStart(defaultStart)
     setYearEnd(defaultEnd)
     setSelectedYear(defaultYear)
     setSelectedMonth(null)
     setSelectedMunicipio('all')
+    setSearchTerm('')
+    setIsDropdownOpen(false)
   }
 
   const handleInputChange = (e) => {
@@ -172,24 +179,6 @@ export function ChartFilters({
         <div className="chart-filters-title">
           <i className="fas fa-filter"></i>
           <span>Filtros</span>
-        </div>
-        <div className="chart-filters-actions">
-          <button 
-            className="chart-filters-apply"
-            onClick={handleApplyFilters}
-            title="Aplicar filtros"
-          >
-            <i className="fas fa-check"></i>
-            <span>Aplicar</span>
-          </button>
-          <button 
-            className="chart-filters-reset"
-            onClick={handleReset}
-            title="Redefinir filtros"
-          >
-            <i className="fas fa-redo"></i>
-            <span>Redefinir</span>
-          </button>
         </div>
       </div>
 
@@ -286,7 +275,7 @@ export function ChartFilters({
                   onChange={handleYearEndChange}
                   className="chart-filter-select"
                 >
-                  {years.map(year => (
+                  {years.filter(year => year <= maxYearLimit).map(year => (
                     <option key={year} value={year}>
                       {year}
                     </option>
@@ -362,13 +351,45 @@ export function ChartFilters({
               Visualização
             </label>
             <div className="chart-filter-options">
-              <button className="chart-filter-option active">
+              <button 
+                className="chart-filter-option active"
+                onClick={() => {
+                  // Limpar filtros de ano e mês para mostrar todos os períodos
+                  setSelectedYear(null)
+                  setSelectedMonth(null)
+                  setYearStart(minAvailableYear)
+                  setYearEnd(maxAvailableYear)
+                  // Aplicar filtros automaticamente
+                  setTimeout(() => {
+                    handleApplyFilters()
+                  }, 100)
+                }}
+              >
                 <i className="fas fa-chart-line"></i>
                 <span>Todos os Períodos</span>
               </button>
             </div>
           </div>
         )}
+      </div>
+      
+      <div className="chart-filters-actions">
+        <button 
+          className="chart-filters-reset"
+          onClick={handleReset}
+          title="Redefinir filtros"
+        >
+          <i className="fas fa-redo"></i>
+          <span>Redefinir</span>
+        </button>
+        <button 
+          className="chart-filters-apply"
+          onClick={handleApplyFilters}
+          title="Aplicar filtros"
+        >
+          <i className="fas fa-check"></i>
+          <span>Aplicar</span>
+        </button>
       </div>
     </div>
   )

@@ -31,7 +31,12 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Não redirecionar se for erro de login (deixar o componente tratar)
+    const isLoginEndpoint = error.config?.url?.includes('/api/login')
+    const isSignupEndpoint = error.config?.url?.includes('/api/signup')
+    
+    if (error.response?.status === 401 && !isLoginEndpoint && !isSignupEndpoint) {
+      // Só redirecionar se não for login/signup (erro de autenticação em outras rotas)
       localStorage.removeItem('auth_token')
       localStorage.removeItem('user')
       localStorage.removeItem('refresh_token')

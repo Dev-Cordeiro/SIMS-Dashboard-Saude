@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { ObitosPorCidCapChart } from '../components/ObitosPorCidCapChart'
-import { exportChartAsPNG, exportDataAsCSV } from '../utils/exportChart'
+import { exportChartAsPNG, exportChartAsPDF, exportDataAsCSV } from '../utils/exportChart'
+import { getChartDescription } from '../utils/chartDescriptions'
 import { formatNumber } from '../utils/formatNumber'
 import { ChartFilters } from '../components/ChartFilters'
 import { api } from '../services/api'
@@ -9,7 +10,8 @@ import './ObitosCidCapPage.css'
 
 export function ObitosCidCapPage({
   obitosCid: initialObitosCid,
-  loading: initialLoading
+  loading: initialLoading,
+  periodoDados = null
 }) {
   const chartRef = useRef(null)
   const [drillDown, setDrillDown] = useState(null)
@@ -65,26 +67,26 @@ export function ObitosCidCapPage({
 
   const aplicarFiltros = async () => {
     setLoading(true)
+    // Limpar resultados anteriores antes de aplicar novos filtros
+    setObitosCid([])
+    setDrillDown(null)
     try {
-      if (selectedMunicipio !== 'all' || selectedYear || selectedMonth) {
-        const params = {}
-        if (selectedMunicipio !== 'all') {
-          params.id_localidade = selectedMunicipio
-        }
-        if (selectedYear) {
-          params.ano = selectedYear
-        }
-        if (selectedMonth) {
-          params.mes = selectedMonth
-        }
-        
-        const res = await api.get('/api/obitos/cid-cap', { params })
-        setObitosCid(res.data || [])
-      } else {
-        setObitosCid(dadosCompletos)
+      const params = {}
+      if (selectedMunicipio !== 'all') {
+        params.id_localidade = selectedMunicipio
       }
-      setDrillDown(null)
+      if (selectedYear) {
+        params.ano = selectedYear
+      }
+      if (selectedMonth) {
+        params.mes = selectedMonth
+      }
+      
+      // Sempre fazer a requisição, mesmo sem filtros, para garantir dados atualizados
+      const res = await api.get('/api/obitos/cid-cap', { params })
+      setObitosCid(res.data || [])
     } catch (error) {
+      console.error('Erro ao aplicar filtros:', error)
       setObitosCid([])
     } finally {
       setLoading(false)
@@ -92,7 +94,6 @@ export function ObitosCidCapPage({
   }
 
   const handleExportPNG = () => {
-    // Preparar informações dos filtros aplicados
     const filtrosInfo = []
     if (selectedMunicipio !== 'all') {
       const municipio = localidades.find(l => l.id_localidade === selectedMunicipio)
@@ -111,11 +112,36 @@ export function ObitosCidCapPage({
     if (drillDown) {
       filtrosInfo.push(`Capítulo: ${drillDown.capitulo_cod} - ${drillDown.capitulo_nome}`)
     }
-    exportChartAsPNG(chartRef, 'obitos-cid10-capitulo', filtrosInfo)
+    const description = getChartDescription('obitos-cid10-capitulo')
+    exportChartAsPNG(chartRef, 'obitos-cid10-capitulo', filtrosInfo, description)
+  }
+
+  const handleExportPDF = () => {
+    const filtrosInfo = []
+    if (selectedMunicipio !== 'all') {
+      const municipio = localidades.find(l => l.id_localidade === selectedMunicipio)
+      if (municipio) {
+        filtrosInfo.push(`Município: ${municipio.municipio} - ${municipio.uf}`)
+      }
+    }
+    if (selectedYear) {
+      filtrosInfo.push(`Ano: ${selectedYear}`)
+    }
+    if (selectedMonth) {
+      const meses = ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+      filtrosInfo.push(`Mês: ${meses[selectedMonth]}`)
+    }
+    if (drillDown) {
+      filtrosInfo.push(`Capítulo: ${drillDown.capitulo_cod} - ${drillDown.capitulo_nome}`)
+    }
+    const description = getChartDescription('obitos-cid10-capitulo')
+    exportChartAsPDF(chartRef, 'obitos-cid10-capitulo', filtrosInfo, description)
   }
 
   const handleExportCSV = () => {
-    exportDataAsCSV(obitosCid, 'obitos-cid10-capitulo')
+    const description = getChartDescription('obitos-cid10-capitulo')
+    exportDataAsCSV(obitosCid, 'obitos-cid10-capitulo', description)
   }
 
   return (
@@ -161,6 +187,7 @@ export function ObitosCidCapPage({
           initialMunicipio={selectedMunicipio}
           initialYear={selectedYear}
           initialMonth={selectedMonth}
+          maxAvailableYear={periodoDados?.ano_fim || null}
         />
 
         {/* Cards de Estatísticas Resumidas */}
@@ -238,6 +265,14 @@ export function ObitosCidCapPage({
                 >
                   <i className="fas fa-download"></i>
                   <span>PNG</span>
+                </button>
+                <button
+                  className="export-button"
+                  onClick={handleExportPDF}
+                  title="Exportar como PDF"
+                >
+                  <i className="fas fa-file-pdf"></i>
+                  <span>PDF</span>
                 </button>
                 <button
                   className="export-button"

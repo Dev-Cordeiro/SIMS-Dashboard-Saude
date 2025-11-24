@@ -325,36 +325,120 @@
 .leaflet-overlay-pane svg {
   width: 100% !important;
   height: 100% !important;
+  pointer-events: auto !important;
 }
 
 .leaflet-overlay-pane path {
   vector-effect: non-scaling-stroke;
+  pointer-events: auto !important;
+}
+
+.leaflet-interactive {
+  cursor: pointer !important;
+}
+
+.leaflet-interactive path {
+  pointer-events: auto !important;
+}
+
+.map-wrapper-real .leaflet-overlay-pane svg path {
+  pointer-events: auto !important;
+}
+
+/* Garantir que os estilos inline sejam respeitados */
+.map-wrapper-real .leaflet-overlay-pane svg path[fill] {
+  fill: var(--map-fill-color, inherit) !important;
+}
+
+.map-wrapper-real .leaflet-overlay-pane svg path[fill-opacity] {
+  fill-opacity: var(--map-fill-opacity, inherit) !important;
 }
 
 @media (max-width: 768px) {
+  .brasil-map-real-container {
+    padding: 12px;
+    margin-bottom: 16px;
+  }
+
   .map-wrapper-real {
-    height: 400px;
+    height: 350px;
+    min-height: 350px;
+    max-height: 400px;
+  }
+
+  .map-wrapper-real .leaflet-container {
+    min-height: 350px !important;
+  }
+
+  #brasil-map-container {
+    min-height: 350px !important;
   }
 
   .map-loading {
-    height: 400px;
+    height: 350px;
+    min-height: 350px;
   }
 
   .map-legend {
     position: relative;
     bottom: auto;
     right: auto;
-    margin-top: 16px;
+    margin-top: 12px;
     width: 100%;
+    padding: 12px;
+    font-size: 11px;
+  }
+
+  .legend-title {
+    font-size: 11px;
+    margin-bottom: 8px;
+  }
+
+  .legend-item {
+    font-size: 10px;
+    gap: 6px;
+  }
+
+  .legend-color {
+    width: 14px;
+    height: 14px;
   }
 
   .map-header {
     flex-direction: column;
     align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+  }
+
+  .map-title {
+    font-size: 16px;
   }
 
   .map-select {
     width: 100%;
+    min-width: 100%;
+    max-width: 100%;
+    font-size: 12px;
+    padding: 6px 10px;
+    padding-right: 28px;
+  }
+
+  .map-badge {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+
+  .leaflet-control-zoom {
+    margin: 8px !important;
+  }
+
+  .leaflet-control-zoom a {
+    width: 28px !important;
+    height: 28px !important;
+    line-height: 28px !important;
+    font-size: 16px !important;
   }
 }
 

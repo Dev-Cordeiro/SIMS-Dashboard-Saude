@@ -7,13 +7,11 @@ import './Login.css'
 export function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setError('')
     setLoading(true)
 
     if (!email || !password) {
@@ -26,12 +24,21 @@ export function Login() {
       const result = await login(email, password)
       
       if (!result.success) {
-        toast.error(result.error || 'Erro ao fazer login')
+        // Exibir mensagem de erro específica via toast
+        const errorMessage = result.error || 'Email ou senha incorretos'
+        toast.error(errorMessage, { 
+          autoClose: 5000,
+          position: "top-right"
+        })
       } else {
         toast.success('Login realizado com sucesso!')
       }
     } catch (error) {
-      toast.error('Erro inesperado. Tente novamente.')
+      const errorMessage = error.message || 'Erro inesperado. Tente novamente.'
+      toast.error(errorMessage, { 
+        autoClose: 5000,
+        position: "top-right"
+      })
     } finally {
       setLoading(false)
     }
@@ -70,7 +77,7 @@ export function Login() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email Address"
+                  placeholder="Email"
                   disabled={loading}
                 />
               </div>
@@ -84,7 +91,7 @@ export function Login() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Password"
+                  placeholder="Senha"
                   disabled={loading}
                 />
               </div>
@@ -92,14 +99,21 @@ export function Login() {
 
             <button 
               type="submit" 
-              className="login-button"
+              className={`login-button ${loading ? 'loading' : ''}`}
               disabled={loading}
             >
-              {loading ? 'Entrando...' : 'Login'}
+              {loading ? (
+                <>
+                  <span className="button-spinner"></span>
+                  Entrando...
+                </>
+              ) : (
+                'Login'
+              )}
             </button>
 
             <div className="login-footer">
-              <a href="#" className="forgot-password">Esqueceu a senha?</a>
+              <a href="/forgot-password" className="forgot-password">Esqueceu a senha?</a>
               <p>Não tem uma conta? <a href="/signup">Cadastre-se</a></p>
             </div>
           </form>

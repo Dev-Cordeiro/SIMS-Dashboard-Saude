@@ -5,7 +5,7 @@ import { Modal } from './Modal'
 import { toast } from 'react-toastify'
 import './Sidebar.css'
 
-export function Sidebar({ isOpen, setIsOpen, collapsed, setCollapsed, currentPage, setCurrentPage }) {
+export function Sidebar({ isOpen, setIsOpen, collapsed, setCollapsed, currentPage, setCurrentPage, canNavigate = true }) {
   const { user, logout } = useAuth()
   const [showLogoutModal, setShowLogoutModal] = useState(false)
 
@@ -32,6 +32,10 @@ export function Sidebar({ isOpen, setIsOpen, collapsed, setCollapsed, currentPag
   ]
 
   const handleNavClick = (pageId) => {
+    if (!canNavigate && pageId !== 'dashboard') {
+      toast.info('Por favor, sincronize os dados primeiro clicando no ícone de sincronizar')
+      return
+    }
     setCurrentPage(pageId)
     setIsOpen(false)
   }
