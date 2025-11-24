@@ -2,7 +2,6 @@ import { getChartDescription } from './chartDescriptions'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
 
-// Função auxiliar para quebrar texto em múltiplas linhas
 function wrapText(ctx, text, maxWidth, x, y, lineHeight) {
   const words = text.split(' ')
   let line = ''
@@ -33,7 +32,6 @@ export async function exportChartAsPNG(chartRef, filename = 'grafico', filtrosIn
   const container = chartRef.current
   
   try {
-    // Esconder botões de exportação e badge temporariamente
     const chartActions = container.querySelector('.chart-actions')
     const chartBadge = container.querySelector('.chart-badge')
     let originalDisplayActions = null
@@ -49,7 +47,6 @@ export async function exportChartAsPNG(chartRef, filename = 'grafico', filtrosIn
       chartBadge.style.display = 'none'
     }
     
-    // Esconder o componente Brush (zoom) dentro do SVG
     const svgElementForBrush = container.querySelector('svg')
     const hiddenElements = []
     
@@ -95,14 +92,11 @@ export async function exportChartAsPNG(chartRef, filename = 'grafico', filtrosIn
       })
     }
     
-    // Garantir que todos os elementos SVG (incluindo labels) sejam visíveis
     const svgElements = container.querySelectorAll('svg')
     svgElements.forEach(svg => {
-      // Garantir que o SVG não tenha overflow hidden que possa cortar labels
       const originalOverflow = svg.style.overflow
       svg.style.overflow = 'visible'
       
-      // Garantir que todos os grupos de labels sejam visíveis
       const labelGroups = svg.querySelectorAll('g.recharts-label-list, g[class*="label"]')
       labelGroups.forEach(group => {
         group.style.display = 'block'
@@ -110,7 +104,6 @@ export async function exportChartAsPNG(chartRef, filename = 'grafico', filtrosIn
         group.style.opacity = '1'
       })
       
-      // Restaurar overflow após captura (será feito depois)
       svg._originalOverflow = originalOverflow
     })
     
@@ -125,7 +118,6 @@ export async function exportChartAsPNG(chartRef, filename = 'grafico', filtrosIn
       scrollX: 0,
       scrollY: 0,
       onclone: (clonedDoc) => {
-        // Garantir que labels sejam visíveis no clone
         const clonedSvgs = clonedDoc.querySelectorAll('svg')
         clonedSvgs.forEach(svg => {
           svg.style.overflow = 'visible'
@@ -139,7 +131,6 @@ export async function exportChartAsPNG(chartRef, filename = 'grafico', filtrosIn
       }
     })
     
-    // Restaurar overflow original
     svgElements.forEach(svg => {
       if (svg._originalOverflow !== undefined) {
         svg.style.overflow = svg._originalOverflow
@@ -147,7 +138,6 @@ export async function exportChartAsPNG(chartRef, filename = 'grafico', filtrosIn
       }
     })
     
-    // Restaurar elementos
     if (chartActions) {
       chartActions.style.display = originalDisplayActions || ''
     }
@@ -158,7 +148,6 @@ export async function exportChartAsPNG(chartRef, filename = 'grafico', filtrosIn
       element.style.display = display || ''
     })
     
-    // Extrair título
     const chartHeader = container.querySelector('.chart-header')
     const titleText = chartHeader?.querySelector('.chart-title')?.textContent || ''
     
@@ -171,7 +160,6 @@ export async function exportChartAsPNG(chartRef, filename = 'grafico', filtrosIn
     const svgHeight = svgRect.height || svgElement.clientHeight || 600
     const svgWidth = svgRect.width || svgElement.clientWidth || 800
     
-    // PAISAGEM: inverter dimensões (largura > altura)
     const landscapeWidth = Math.max(svgWidth, svgHeight, 1200)
     const landscapeHeight = Math.min(svgWidth, svgHeight, 800)
     
@@ -181,18 +169,15 @@ export async function exportChartAsPNG(chartRef, filename = 'grafico', filtrosIn
     const descriptionHeight = description ? 80 : 0
     const filtrosBoxHeight = filtrosInfo.length > 0 ? (filtrosInfo.length * 30) + 70 : 0
     
-    // Canvas em paisagem
     finalCanvas.width = landscapeWidth
     finalCanvas.height = titleHeight + descriptionHeight + filtrosBoxHeight + landscapeHeight + padding * 2
     const finalCtx = finalCanvas.getContext('2d')
     
-    // Fundo branco
     finalCtx.fillStyle = '#ffffff'
     finalCtx.fillRect(0, 0, finalCanvas.width, finalCanvas.height)
     
     let yPos = padding
     
-    // Título
     if (titleText) {
       finalCtx.fillStyle = '#1e293b'
       finalCtx.font = 'bold 36px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
@@ -202,7 +187,6 @@ export async function exportChartAsPNG(chartRef, filename = 'grafico', filtrosIn
       yPos += 70
     }
     
-    // Descrição
     if (description) {
       finalCtx.fillStyle = '#64748b'
       finalCtx.font = '18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
@@ -211,7 +195,6 @@ export async function exportChartAsPNG(chartRef, filename = 'grafico', filtrosIn
       yPos += 20
     }
     
-    // Filtros
     if (filtrosInfo.length > 0) {
       yPos += 10
       const boxHeight = (filtrosInfo.length * 32) + 60
@@ -244,7 +227,6 @@ export async function exportChartAsPNG(chartRef, filename = 'grafico', filtrosIn
       yPos += 25
     }
     
-    // Desenhar gráfico
     const headerHeight = chartHeader ? chartHeader.offsetHeight : 0
     const chartStartY = headerHeight
     const originalChartHeight = canvas.height - chartStartY
@@ -274,11 +256,10 @@ export async function exportChartAsPDF(chartRef, filename = 'grafico', filtrosIn
     return
   }
 
-  const container = chartRef.current
-  
-  try {
-    // Esconder botões temporariamente
-    const chartActions = container.querySelector('.chart-actions')
+    const container = chartRef.current
+    
+    try {
+      const chartActions = container.querySelector('.chart-actions')
     const chartBadge = container.querySelector('.chart-badge')
     let originalDisplayActions = null
     let originalDisplayBadge = null
@@ -311,7 +292,6 @@ export async function exportChartAsPDF(chartRef, filename = 'grafico', filtrosIn
     const chartHeader = container.querySelector('.chart-header')
     const titleText = chartHeader?.querySelector('.chart-title')?.textContent || ''
     
-    // Criar PDF em paisagem (A4 landscape: 297mm x 210mm)
     const pdf = new jsPDF({
       orientation: 'landscape',
       unit: 'mm',
@@ -326,7 +306,6 @@ export async function exportChartAsPDF(chartRef, filename = 'grafico', filtrosIn
     
     let yPos = margin
     
-    // Título
     if (titleText) {
       pdf.setFontSize(20)
       pdf.setTextColor(30, 41, 59) // #1e293b
@@ -335,7 +314,6 @@ export async function exportChartAsPDF(chartRef, filename = 'grafico', filtrosIn
       yPos += 12
     }
     
-    // Descrição
     if (description) {
       pdf.setFontSize(12)
       pdf.setTextColor(100, 116, 139) // #64748b
@@ -345,7 +323,6 @@ export async function exportChartAsPDF(chartRef, filename = 'grafico', filtrosIn
       yPos += splitDescription.length * 6 + 5
     }
     
-    // Filtros
     if (filtrosInfo.length > 0) {
       yPos += 5
       pdf.setFontSize(14)
@@ -390,7 +367,6 @@ export function exportDataAsCSV(data, filename = 'dados', description = '') {
 
   let csvContent = ''
   
-  // Adicionar descrição no início do CSV
   if (description) {
     csvContent += `# ${description}\n`
     csvContent += `# Gerado em: ${new Date().toLocaleString('pt-BR')}\n\n`
@@ -414,7 +390,6 @@ export function exportDataAsCSV(data, filename = 'dados', description = '') {
   link.click()
 }
 
-// Função auxiliar para normalizar texto (remover acentuação)
 export function normalizeText(text) {
   if (!text) return ''
   return text

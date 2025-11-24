@@ -55,11 +55,9 @@ export function AuthProvider({ children }) {
         }
       }
       
-      // Capturar mensagens específicas do backend
       let errorMessage = 'Email ou senha incorretos'
       
       if (error.response?.status === 401) {
-        // Erro de autenticação
         const detail = error.response?.data?.detail || ''
         
         if (detail.includes('Email ou senha incorretos') || 
@@ -146,8 +144,27 @@ export function AuthProvider({ children }) {
     }
   }
 
+  const deleteAccount = async () => {
+    if (!user || !token) return { success: false, error: 'Usuário não autenticado' }
+
+    try {
+      const response = await api.delete('/api/user/account')
+      const data = response.data
+
+      if (data.success) {
+        logout()
+        return { success: true, message: data.message || 'Conta encerrada com sucesso' }
+      }
+
+      return { success: false, error: 'Erro ao encerrar conta' }
+    } catch (error) {
+      const errorMessage = error.response?.data?.detail || 'Erro ao encerrar conta'
+      return { success: false, error: errorMessage }
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, login, signUp, logout, updateProfile, loading }}>
+    <AuthContext.Provider value={{ user, login, signUp, logout, updateProfile, deleteAccount, loading }}>
       {children}
     </AuthContext.Provider>
   )

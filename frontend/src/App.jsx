@@ -23,7 +23,6 @@ import './App.css'
 
 function Dashboard() {
   const { user } = useAuth()
-  // Restaurar página atual do localStorage ou usar 'dashboard' como padrão
   const [currentPage, setCurrentPage] = useState(() => {
     const savedPage = localStorage.getItem('current_page')
     return savedPage || 'dashboard'
@@ -43,7 +42,7 @@ function Dashboard() {
   const [periodoDados, setPeriodoDados] = useState(null)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [showTutorial, setShowTutorial] = useState(false)
-  const [syncOverlayStatus, setSyncOverlayStatus] = useState(null) // null, 'loading', 'success', 'error'
+  const [syncOverlayStatus, setSyncOverlayStatus] = useState(null)
   const [canNavigate, setCanNavigate] = useState(false)
 
   useEffect(() => {
@@ -51,7 +50,6 @@ function Dashboard() {
     const hasSyncedBefore = localStorage.getItem('has_synced_before')
     const hasSeenTutorial = localStorage.getItem('has_seen_tutorial')
     
-    // Mapeamento de URL para página
     const urlToPage = {
       '/': 'dashboard',
       '/serie-mensal': 'serie-mensal',
@@ -68,7 +66,6 @@ function Dashboard() {
     const currentPath = window.location.pathname
     const pageFromUrl = urlToPage[currentPath]
     
-    // Se a URL tem uma página válida, usar ela (prioridade sobre localStorage)
     if (pageFromUrl) {
       setCurrentPage(pageFromUrl)
       localStorage.setItem('current_page', pageFromUrl)
@@ -78,12 +75,10 @@ function Dashboard() {
       carregarDadosDoCache()
       setCanNavigate(true)
     } else if (!hasSeenTutorial) {
-      // Primeira vez - mostrar tutorial
       setShowTutorial(true)
     }
   }, [])
 
-  // Listener para botão voltar/avançar do navegador
   useEffect(() => {
     const urlToPage = {
       '/': 'dashboard',
@@ -267,7 +262,6 @@ function Dashboard() {
       
       salvarDadosNoCache(dadosParaCache)
       
-      // Marcar que já houve uma sincronização
       localStorage.setItem('has_synced_before', 'true')
       
       if (showOverlay) {
@@ -409,9 +403,7 @@ function Dashboard() {
       return // Bloquear navegação se ainda não sincronizou
     }
     setCurrentPage(page)
-    // Salvar página atual no localStorage
     localStorage.setItem('current_page', page)
-    // Atualizar URL sem recarregar a página
     const pageToUrl = {
       'dashboard': '/',
       'serie-mensal': '/serie-mensal',

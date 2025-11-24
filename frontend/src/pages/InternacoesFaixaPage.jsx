@@ -61,19 +61,21 @@ export function InternacoesFaixaPage({
     }
   }, [])
 
-  const aplicarFiltros = async () => {
+  const aplicarFiltros = async (municipioId = null) => {
     setLoading(true)
-    // Limpar resultados anteriores antes de aplicar novos filtros
     setInternacoesFaixa([])
     try {
-      if (selectedMunicipio !== 'all') {
-        const params = { params: { id_localidade: selectedMunicipio } }
+      const municipioToUse = municipioId !== null && municipioId !== undefined ? municipioId : selectedMunicipio
+      
+      if (municipioToUse !== 'all' && municipioToUse !== null && municipioToUse !== undefined) {
+        const params = { params: { id_localidade: municipioToUse } }
         const res = await api.get('/api/internacoes/faixa', params)
         setInternacoesFaixa(res.data || [])
       } else {
         setInternacoesFaixa(dadosCompletos)
       }
     } catch (error) {
+      console.error('Erro ao aplicar filtros:', error)
       setInternacoesFaixa([])
     } finally {
       setLoading(false)
@@ -135,17 +137,25 @@ export function InternacoesFaixaPage({
           </p>
         </div>
 
+        {/* Informação do Período dos Dados */}
+        {periodoDados && periodoDados.ano_inicio && periodoDados.ano_fim && (
+          <div className="page-periodo-info">
+            <i className="fas fa-calendar-alt"></i>
+            <span>Dados referentes ao período: <strong>{periodoDados.ano_inicio} a {periodoDados.ano_fim}</strong></span>
+          </div>
+        )}
+
         {/* Filtros */}
         <ChartFilters 
           onApplyFilters={(filters) => {
+            // Sempre atualizar o estado
             if (filters.municipio !== undefined) {
               setSelectedMunicipio(filters.municipio)
             }
-            setTimeout(() => {
-              aplicarFiltros()
-            }, 100)
+            // Aplicar filtros imediatamente com o valor do filtro ou o estado atual
+            aplicarFiltros(filters.municipio !== undefined ? filters.municipio : null)
           }}
-          showPeriod={true}
+          showPeriod={false}
           showYearRange={false}
           showMunicipio={true}
           localidades={localidades}

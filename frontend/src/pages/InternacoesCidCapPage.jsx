@@ -65,24 +65,26 @@ export function InternacoesCidCapPage({
     }
   }, [])
 
-  const aplicarFiltros = async () => {
+  const aplicarFiltros = async (filtersData = null) => {
     setLoading(true)
-    // Limpar resultados anteriores antes de aplicar novos filtros
     setInternacoesCid([])
     setDrillDown(null)
     try {
       const params = {}
-      if (selectedMunicipio !== 'all') {
-        params.id_localidade = selectedMunicipio
+      const municipioToUse = filtersData?.municipio !== undefined ? filtersData.municipio : selectedMunicipio
+      const yearToUse = filtersData?.year !== undefined ? filtersData.year : selectedYear
+      const monthToUse = filtersData?.month !== undefined ? filtersData.month : selectedMonth
+      
+      if (municipioToUse !== 'all') {
+        params.id_localidade = municipioToUse
       }
-      if (selectedYear) {
-        params.ano = selectedYear
+      if (yearToUse) {
+        params.ano = yearToUse
       }
-      if (selectedMonth) {
-        params.mes = selectedMonth
+      if (monthToUse) {
+        params.mes = monthToUse
       }
       
-      // Sempre fazer a requisição, mesmo sem filtros, para garantir dados atualizados
       const res = await api.get('/api/internacoes/cid-cap', { params })
       setInternacoesCid(res.data || [])
     } catch (error) {
@@ -175,9 +177,7 @@ export function InternacoesCidCapPage({
             if (filters.month !== undefined) {
               setSelectedMonth(filters.month)
             }
-            setTimeout(() => {
-              aplicarFiltros()
-            }, 100)
+            aplicarFiltros(filters)
           }}
           showPeriod={true}
           showYearRange={false}

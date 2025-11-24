@@ -22,13 +22,11 @@ export function SerieMensalPage({
   const [selectedMonth, setSelectedMonth] = useState(null)
   const [availableYears, setAvailableYears] = useState([])
 
-  // Atualizar anos disponíveis baseado nos dados completos (não filtrados)
   useEffect(() => {
     if (dadosCompletos.length > 0) {
       const years = [...new Set(dadosCompletos.map(item => item.ano).filter(Boolean))].sort((a, b) => b - a)
       setAvailableYears(years)
     } else if (seriesMensal.length > 0) {
-      // Fallback: usar seriesMensal se dadosCompletos ainda não estiver carregado
       const years = [...new Set(seriesMensal.map(item => item.ano).filter(Boolean))].sort((a, b) => b - a)
       setAvailableYears(years)
     }
@@ -86,26 +84,30 @@ export function SerieMensalPage({
     }
   }, [])
 
-  const aplicarFiltros = async () => {
+  const aplicarFiltros = async (filtersData = null) => {
     setLoading(true)
-    // Limpar resultados anteriores antes de aplicar novos filtros
     setSeriesMensal([])
     try {
       const params = {}
-      if (selectedMunicipio !== 'all') {
-        params.id_localidade = selectedMunicipio
+      const municipioToUse = filtersData?.municipio !== undefined ? filtersData.municipio : selectedMunicipio
+      const yearStartToUse = filtersData?.yearStart !== undefined ? filtersData.yearStart : yearStart
+      const yearEndToUse = filtersData?.yearEnd !== undefined ? filtersData.yearEnd : yearEnd
+      const monthToUse = filtersData?.month !== undefined ? filtersData.month : selectedMonth
+      
+      if (municipioToUse !== 'all') {
+        params.id_localidade = municipioToUse
       }
-      if (yearStart) {
-        params.ano_inicio = yearStart
+      if (yearStartToUse) {
+        params.ano_inicio = yearStartToUse
       }
-      if (yearEnd) {
-        params.ano_fim = yearEnd
+      if (yearEndToUse) {
+        params.ano_fim = yearEndToUse
       }
-      if (selectedMonth) {
-        params.mes = selectedMonth
+      if (monthToUse) {
+        params.mes = monthToUse
       }
       
-      if (selectedMunicipio !== 'all' || yearStart || yearEnd || selectedMonth) {
+      if (municipioToUse !== 'all' || yearStartToUse || yearEndToUse || monthToUse) {
         const res = await api.get('/api/series/mensal', { params })
         setSeriesMensal(res.data || [])
       } else {
@@ -202,9 +204,7 @@ export function SerieMensalPage({
             if (filters.month !== undefined) {
               setSelectedMonth(filters.month)
             }
-            setTimeout(() => {
-              aplicarFiltros()
-            }, 100)
+            aplicarFiltros(filters)
           }}
           showPeriod={false}
           showYearRange={true}

@@ -1,4 +1,3 @@
-// Descrições dos gráficos para downloads
 export const chartDescriptions = {
   'internacoes-sexo': 'Distribuição das internações hospitalares segundo o sexo dos pacientes. Analise as diferenças e proporções entre os grupos.',
   'internacoes-faixa-etaria': 'Distribuição das internações hospitalares por faixa etária dos pacientes. Analise a concentração de casos por idade.',
@@ -11,7 +10,6 @@ export const chartDescriptions = {
   'dashboard': 'Dashboard geral com visão consolidada dos principais indicadores de saúde.'
 }
 
-// Função auxiliar para obter descrição
 export function getChartDescription(chartId) {
   return chartDescriptions[chartId] || ''
 }

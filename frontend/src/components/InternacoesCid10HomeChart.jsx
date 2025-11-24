@@ -29,7 +29,6 @@ export function InternacoesCid10HomeChart({ data, onBarClick }) {
     )
   }
 
-  // Filtrar dados inválidos e garantir que têm os campos necessários
   const dadosValidos = data.filter(d => 
     d && 
     d.capitulo_cod && 
@@ -54,7 +53,6 @@ export function InternacoesCid10HomeChart({ data, onBarClick }) {
     )
   }
 
-  // Garantir que os valores são números
   const dadosComNumeros = dadosValidos.map(d => ({
     ...d,
     total_internacoes: Number(d.total_internacoes) || 0,
@@ -115,20 +113,21 @@ export function InternacoesCid10HomeChart({ data, onBarClick }) {
       {onBarClick && (
         <div style={{
           position: 'absolute',
-          top: 8,
-          right: 8,
+          bottom: 85,
+          right: 15,
           fontSize: '10px',
           color: '#64748b',
           background: 'rgba(255, 255, 255, 0.95)',
           padding: '4px 8px',
           borderRadius: '6px',
-          zIndex: 10,
+          zIndex: 100,
           border: '1px solid #e2e8f0',
           boxShadow: '0 1px 4px rgba(0, 0, 0, 0.08)',
           display: 'flex',
           alignItems: 'center',
           gap: '4px',
-          fontWeight: 500
+          fontWeight: 500,
+          pointerEvents: 'none'
         }}>
           <i className="fas fa-mouse-pointer" style={{ color: '#14b8a6', fontSize: '10px' }}></i>
           <span>Clique para detalhar</span>

@@ -27,6 +27,31 @@
   border-bottom: 1px solid #e2e8f0;
 }
 
+.chart-filters-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.chart-filters-toggle:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+  color: #14b8a6;
+}
+
+.chart-filters-toggle i {
+  font-size: 12px;
+}
+
 .chart-filters-actions {
   display: flex;
   align-items: center;
@@ -36,6 +61,20 @@
   padding-top: 12px;
   border-top: 1px solid #e2e8f0;
   width: 100%;
+  max-height: 100px;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease, margin 0.3s ease, padding 0.3s ease, border 0.3s ease;
+  opacity: 1;
+}
+
+.chart-filters-content.collapsed ~ .chart-filters-actions {
+  max-height: 0;
+  opacity: 0;
+  margin-top: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-top: none;
+  overflow: hidden;
 }
 
 .chart-filters-title {
@@ -100,6 +139,18 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  max-height: 2000px;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease, margin 0.3s ease;
+  opacity: 1;
+  margin-bottom: 0;
+}
+
+.chart-filters-content.collapsed {
+  max-height: 0;
+  opacity: 0;
+  margin-bottom: 0;
+  padding: 0;
 }
 
 .chart-filter-group {
@@ -220,7 +271,6 @@
   box-shadow: 0 2px 8px rgba(20, 184, 166, 0.3);
 }
 
-/* Estilos para seleção de município */
 .chart-filter-municipio-container {
   position: relative;
   width: 100%;

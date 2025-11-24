@@ -14,6 +14,35 @@ import { formatNumber, formatTooltipValue } from '../utils/formatNumber'
 export function MonthlySeriesChart({ data, onDataPointClick }) {
   const [brushStartIndex, setBrushStartIndex] = useState(0)
   const [brushEndIndex, setBrushEndIndex] = useState(null)
+  
+  const dadosValidos = data && Array.isArray(data) ? data.filter(d => 
+    d && 
+    d.ano_mes && 
+    (d.internacoes !== null && d.internacoes !== undefined || d.obitos !== null && d.obitos !== undefined)
+  ) : []
+  
+  const dadosComNumeros = dadosValidos.length > 0 ? dadosValidos.map(d => ({
+    ...d,
+    internacoes: Number(d.internacoes) || 0,
+    obitos: Number(d.obitos) || 0,
+    ano_mes: String(d.ano_mes || '').trim(),
+    ano: Number(d.ano) || 0,
+    mes: Number(d.mes) || 0
+  })).filter(d => d.ano_mes !== '')
+    .sort((a, b) => {
+      if (a.ano !== b.ano) {
+        return a.ano - b.ano
+      }
+      return a.mes - b.mes
+    }) : []
+  
+  const totalDataPoints = dadosComNumeros.length
+  const shouldUseDefaultZoom = totalDataPoints > 30
+  const defaultBrushEnd = shouldUseDefaultZoom ? Math.min(30, totalDataPoints - 1) : (totalDataPoints > 0 ? totalDataPoints - 1 : null)
+  
+  const [currentBrushStart, setCurrentBrushStart] = useState(0)
+  const [currentBrushEnd, setCurrentBrushEnd] = useState(shouldUseDefaultZoom ? defaultBrushEnd : null)
+  
   if (!data || !Array.isArray(data) || data.length === 0) {
     return (
       <div style={{ 
@@ -30,44 +59,7 @@ export function MonthlySeriesChart({ data, onDataPointClick }) {
     )
   }
 
-  const dadosValidos = data.filter(d => 
-    d && 
-    d.ano_mes && 
-    (d.internacoes !== null && d.internacoes !== undefined || d.obitos !== null && d.obitos !== undefined)
-  )
-
   if (dadosValidos.length === 0) {
-    return (
-      <div style={{ 
-        width: '100%', 
-        height: 350, 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        color: '#64748b',
-        fontSize: '16px'
-      }}>
-        <p>Dados inválidos ou incompletos</p>
-      </div>
-    )
-  }
-
-  const dadosComNumeros = dadosValidos.map(d => ({
-    ...d,
-    internacoes: Number(d.internacoes) || 0,
-    obitos: Number(d.obitos) || 0,
-    ano_mes: String(d.ano_mes || '').trim(),
-    ano: Number(d.ano) || 0,
-    mes: Number(d.mes) || 0
-  })).filter(d => d.ano_mes !== '')
-    .sort((a, b) => {
-      if (a.ano !== b.ano) {
-        return a.ano - b.ano
-      }
-      return a.mes - b.mes
-    })
-
-  if (dadosComNumeros.length === 0) {
     return (
       <div style={{ 
         width: '100%', 
@@ -97,12 +89,6 @@ export function MonthlySeriesChart({ data, onDataPointClick }) {
   const dataCount = dadosComNumeros.length
   const baseHeight = 450
   const calculatedHeight = Math.max(baseHeight, Math.min(dataCount * 8 + 200, 800))
-
-  const totalDataPoints = dadosComNumeros.length
-  const shouldUseDefaultZoom = totalDataPoints > 30
-  const defaultBrushEnd = shouldUseDefaultZoom ? Math.min(30, totalDataPoints - 1) : totalDataPoints - 1
-  const [currentBrushStart, setCurrentBrushStart] = useState(0)
-  const [currentBrushEnd, setCurrentBrushEnd] = useState(shouldUseDefaultZoom ? defaultBrushEnd : null)
   
   const handleBrushChange = (brushData) => {
     if (brushData && brushData.startIndex !== undefined && brushData.endIndex !== undefined) {
@@ -175,7 +161,32 @@ export function MonthlySeriesChart({ data, onDataPointClick }) {
             flex-direction: initial !important;
             overflow: visible !important;
           }
-        `}</style>
+        `}        </style>
+        {/* Legend no topo - ajustada para não tampar os dados */}
+        <div style={{
+          position: 'absolute',
+          top: 8,
+          left: 60,
+          zIndex: 10,
+          background: 'rgba(255, 255, 255, 0.95)',
+          padding: '6px 10px',
+          borderRadius: '8px',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+          display: 'flex',
+          gap: '16px',
+          alignItems: 'center',
+          pointerEvents: 'none'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ width: '16px', height: '3px', background: '#0ea5e9', borderRadius: '2px' }}></div>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: '#1e293b' }}>Internações</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ width: '16px', height: '3px', background: '#14b8a6', borderRadius: '2px' }}></div>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: '#1e293b' }}>Óbitos</span>
+          </div>
+        </div>
         <div style={{
           position: 'absolute',
           top: 12,
@@ -304,7 +315,7 @@ export function MonthlySeriesChart({ data, onDataPointClick }) {
       <ResponsiveContainer width="100%" height="100%" minHeight={300}>
         <LineChart 
           data={visibleData} 
-          margin={{ top: 20, right: 30, left: 60, bottom: Math.max(80, dataCount > 50 ? 100 : 80) }}
+          margin={{ top: 50, right: 30, left: 60, bottom: Math.max(80, dataCount > 50 ? 100 : 80) }}
           className="chart-linechart-mobile"
           onClick={handleChartClick}
         >
@@ -355,11 +366,6 @@ export function MonthlySeriesChart({ data, onDataPointClick }) {
             formatter={formatTooltipValue}
             labelStyle={{ fontWeight: 700, marginBottom: '8px', color: '#1e293b', fontSize: '14px' }}
             itemStyle={{ fontWeight: 700, fontSize: '14px' }}
-          />
-          <Legend 
-            wrapperStyle={{ paddingTop: '20px', fontSize: '13px', fontWeight: 600 }}
-            iconType="line"
-            iconSize={16}
           />
           <Line 
             type="monotone" 

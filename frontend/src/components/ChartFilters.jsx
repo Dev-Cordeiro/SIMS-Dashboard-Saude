@@ -35,6 +35,7 @@ export function ChartFilters({
   const [selectedMunicipio, setSelectedMunicipio] = useState(initialMunicipio)
   const [searchTerm, setSearchTerm] = useState('')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(true)
   const dropdownRef = useRef(null)
   const inputRef = useRef(null)
   
@@ -104,7 +105,6 @@ export function ChartFilters({
 
   const handleYearEndChange = (e) => {
     const newEnd = parseInt(e.target.value)
-    // Limitar ao máximo disponível
     const finalEnd = newEnd > maxYearLimit ? maxYearLimit : newEnd
     setYearEnd(finalEnd)
   }
@@ -136,6 +136,8 @@ export function ChartFilters({
     } else if (onFilterChange) {
       onFilterChange(filterData)
     }
+    setIsExpanded(false)
+    setIsDropdownOpen(false)
   }
 
   const handleReset = () => {
@@ -149,6 +151,7 @@ export function ChartFilters({
     setSelectedMunicipio('all')
     setSearchTerm('')
     setIsDropdownOpen(false)
+    setIsExpanded(true)
   }
 
   const handleInputChange = (e) => {
@@ -180,9 +183,16 @@ export function ChartFilters({
           <i className="fas fa-filter"></i>
           <span>Filtros</span>
         </div>
+        <button 
+          className="chart-filters-toggle"
+          onClick={() => setIsExpanded(!isExpanded)}
+          title={isExpanded ? "Colapsar filtros" : "Expandir filtros"}
+        >
+          <i className={`fas fa-chevron-${isExpanded ? 'up' : 'down'}`}></i>
+        </button>
       </div>
 
-      <div className="chart-filters-content">
+      <div className={`chart-filters-content ${!isExpanded ? 'collapsed' : ''}`}>
         {showMunicipio && (
           <div className="chart-filter-group">
             <label className="chart-filter-label">
@@ -354,15 +364,14 @@ export function ChartFilters({
               <button 
                 className="chart-filter-option active"
                 onClick={() => {
-                  // Limpar filtros de ano e mês para mostrar todos os períodos
                   setSelectedYear(null)
                   setSelectedMonth(null)
                   setYearStart(minAvailableYear)
                   setYearEnd(maxAvailableYear)
-                  // Aplicar filtros automaticamente
                   setTimeout(() => {
                     handleApplyFilters()
                   }, 100)
+                  setIsExpanded(false)
                 }}
               >
                 <i className="fas fa-chart-line"></i>

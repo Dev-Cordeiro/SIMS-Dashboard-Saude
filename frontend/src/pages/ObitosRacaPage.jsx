@@ -60,19 +60,38 @@ export function ObitosRacaPage({
     }
   }, [])
 
-  const aplicarFiltros = async () => {
+  const aplicarFiltros = async (municipioId = null) => {
     setLoading(true)
-    // Limpar resultados anteriores antes de aplicar novos filtros
     setObitosRaca([])
     try {
-      if (selectedMunicipio !== 'all') {
-        const params = { params: { id_localidade: selectedMunicipio } }
+      let municipioToUse
+      if (municipioId !== null && municipioId !== undefined) {
+        municipioToUse = municipioId
+      } else {
+        municipioToUse = selectedMunicipio
+      }
+      
+      const isAll = municipioToUse === 'all' || municipioToUse === null || municipioToUse === undefined
+      
+      if (!isAll) {
+        const municipioIdNum = typeof municipioToUse === 'number' ? municipioToUse : Number(municipioToUse)
+        if (isNaN(municipioIdNum)) {
+          console.error('ID do município inválido:', municipioToUse)
+          setObitosRaca([])
+          return
+        }
+        const params = { params: { id_localidade: municipioIdNum } }
+        console.log('Fazendo requisição com params:', params)
         const res = await api.get('/api/obitos/raca', params)
+        console.log('Resposta da API:', res.data?.length || 0, 'registros')
         setObitosRaca(res.data || [])
       } else {
-        setObitosRaca(dadosCompletos)
+        console.log('Usando dados completos:', dadosCompletos.length, 'registros')
+        setObitosRaca(dadosCompletos.length > 0 ? dadosCompletos : [])
       }
     } catch (error) {
+      console.error('Erro ao aplicar filtros:', error)
+      console.error('Detalhes do erro:', error.response?.data || error.message)
       setObitosRaca([])
     } finally {
       setLoading(false)
@@ -135,17 +154,24 @@ export function ObitosRacaPage({
           </p>
         </div>
 
+        {/* Informação do Período dos Dados */}
+        {periodoDados && periodoDados.ano_inicio && periodoDados.ano_fim && (
+          <div className="page-periodo-info">
+            <i className="fas fa-calendar-alt"></i>
+            <span>Dados referentes ao período: <strong>{periodoDados.ano_inicio} a {periodoDados.ano_fim}</strong></span>
+          </div>
+        )}
+
         {/* Filtros */}
         <ChartFilters 
           onApplyFilters={(filters) => {
             if (filters.municipio !== undefined) {
               setSelectedMunicipio(filters.municipio)
             }
-            setTimeout(() => {
-              aplicarFiltros()
-            }, 100)
+            const municipioToApply = filters.municipio !== undefined ? filters.municipio : selectedMunicipio
+            aplicarFiltros(municipioToApply)
           }}
-          showPeriod={true}
+          showPeriod={false}
           showYearRange={false}
           showMunicipio={true}
           localidades={localidades}

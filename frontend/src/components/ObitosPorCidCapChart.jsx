@@ -117,18 +117,24 @@ export function ObitosPorCidCapChart({ data, onBarClick, isHome = false }) {
       {onBarClick && (
         <div style={{
           position: 'absolute',
-          top: 10,
-          right: 10,
+          bottom: isHome ? 85 : 110,
+          right: isHome ? 15 : 30,
           fontSize: '11px',
           color: '#64748b',
-          background: '#f8fafc',
+          background: 'rgba(255, 255, 255, 0.95)',
           padding: '4px 8px',
-          borderRadius: '4px',
-          zIndex: 10,
-          border: '1px solid #e2e8f0'
+          borderRadius: '6px',
+          zIndex: 100,
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 1px 4px rgba(0, 0, 0, 0.08)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          fontWeight: 500,
+          pointerEvents: 'none'
         }}>
-          <i className="fas fa-mouse-pointer" style={{ marginRight: '4px' }}></i>
-          Clique nas barras para detalhar
+          <i className="fas fa-mouse-pointer" style={{ color: '#14b8a6', fontSize: '10px' }}></i>
+          <span>Clique nas barras para detalhar</span>
         </div>
       )}
       <ResponsiveContainer width="100%" height="100%">

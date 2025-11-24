@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { toast } from 'react-toastify'
+import { Modal } from '../components/Modal'
 
 export function PerfilPage({ user: userProp, onCancel }) {
-  const { user: authUser, updateProfile } = useAuth()
+  const { user: authUser, updateProfile, deleteAccount, logout } = useAuth()
   const user = userProp || authUser
   
   const [formData, setFormData] = useState({
@@ -13,6 +14,8 @@ export function PerfilPage({ user: userProp, onCancel }) {
     bio: user?.bio || '',
   })
   const [loading, setLoading] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -38,6 +41,28 @@ export function PerfilPage({ user: userProp, onCancel }) {
       toast.error('Erro ao atualizar perfil')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true)
+    try {
+      const result = await deleteAccount()
+      
+      if (result.success) {
+        toast.success('Conta encerrada com sucesso')
+        setTimeout(() => {
+          window.location.href = '/'
+        }, 1500)
+      } else {
+        toast.error(result.error || 'Erro ao encerrar conta')
+        setDeleting(false)
+        setShowDeleteModal(false)
+      }
+    } catch (error) {
+      toast.error('Erro ao encerrar conta')
+      setDeleting(false)
+      setShowDeleteModal(false)
     }
   }
 
@@ -150,8 +175,72 @@ export function PerfilPage({ user: userProp, onCancel }) {
               </button>
             </div>
           </form>
+
+          {/* Seção de Encerrar Conta */}
+          <div className="profile-danger-zone">
+            <div className="danger-zone-header">
+              <h3>Zona de Perigo</h3>
+              <p>Esta ação não pode ser desfeita</p>
+            </div>
+            <button 
+              type="button"
+              className="btn-danger"
+              onClick={() => setShowDeleteModal(true)}
+              disabled={deleting}
+            >
+              <i className="fas fa-trash-alt"></i>
+              Encerrar Conta
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Modal de Confirmação de Exclusão */}
+      <Modal 
+        isOpen={showDeleteModal}
+        onClose={() => !deleting && setShowDeleteModal(false)}
+        title="Encerrar Conta"
+        showCloseButton={!deleting}
+      >
+        <div className="delete-account-modal">
+          <div className="delete-account-warning">
+            <i className="fas fa-exclamation-triangle"></i>
+            <h3>Atenção!</h3>
+            <p>
+              Você está prestes a encerrar sua conta permanentemente. Esta ação não pode ser desfeita.
+            </p>
+            <p>
+              Todos os seus dados serão removidos e você não poderá mais acessar o sistema com esta conta.
+            </p>
+          </div>
+          <div className="delete-account-actions">
+            <button 
+              className="btn-secondary"
+              onClick={() => setShowDeleteModal(false)}
+              disabled={deleting}
+            >
+              Cancelar
+            </button>
+            <button 
+              className="btn-danger"
+              onClick={handleDeleteAccount}
+              disabled={deleting}
+            >
+              {deleting ? (
+                <>
+                  <i className="fas fa-spinner fa-spin"></i>
+                  Encerrando...
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-trash-alt"></i>
+                  Sim, Encerrar Conta
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </>
   )
 }

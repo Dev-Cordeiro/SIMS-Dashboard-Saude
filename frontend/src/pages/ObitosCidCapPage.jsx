@@ -20,8 +20,6 @@ export function ObitosCidCapPage({
   const [obitosCid, setObitosCid] = useState(initialObitosCid || [])
   const [loading, setLoading] = useState(initialLoading || false)
   const [selectedMunicipio, setSelectedMunicipio] = useState('all')
-  const [selectedYear, setSelectedYear] = useState(null)
-  const [selectedMonth, setSelectedMonth] = useState(null)
 
   useEffect(() => {
     async function carregarLocalidades() {
@@ -65,24 +63,23 @@ export function ObitosCidCapPage({
     }
   }, [])
 
-  const aplicarFiltros = async () => {
+  const aplicarFiltros = async (municipioId = null) => {
     setLoading(true)
-    // Limpar resultados anteriores antes de aplicar novos filtros
     setObitosCid([])
     setDrillDown(null)
     try {
-      const params = {}
-      if (selectedMunicipio !== 'all') {
-        params.id_localidade = selectedMunicipio
-      }
-      if (selectedYear) {
-        params.ano = selectedYear
-      }
-      if (selectedMonth) {
-        params.mes = selectedMonth
+      let municipioToUse
+      if (municipioId !== null && municipioId !== undefined) {
+        municipioToUse = municipioId
+      } else {
+        municipioToUse = selectedMunicipio
       }
       
-      // Sempre fazer a requisição, mesmo sem filtros, para garantir dados atualizados
+      const params = {}
+      if (municipioToUse !== 'all' && municipioToUse !== null && municipioToUse !== undefined) {
+        params.id_localidade = municipioToUse
+      }
+      
       const res = await api.get('/api/obitos/cid-cap', { params })
       setObitosCid(res.data || [])
     } catch (error) {
@@ -101,14 +98,6 @@ export function ObitosCidCapPage({
         filtrosInfo.push(`Município: ${municipio.municipio} - ${municipio.uf}`)
       }
     }
-    if (selectedYear) {
-      filtrosInfo.push(`Ano: ${selectedYear}`)
-    }
-    if (selectedMonth) {
-      const meses = ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
-                     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
-      filtrosInfo.push(`Mês: ${meses[selectedMonth]}`)
-    }
     if (drillDown) {
       filtrosInfo.push(`Capítulo: ${drillDown.capitulo_cod} - ${drillDown.capitulo_nome}`)
     }
@@ -123,14 +112,6 @@ export function ObitosCidCapPage({
       if (municipio) {
         filtrosInfo.push(`Município: ${municipio.municipio} - ${municipio.uf}`)
       }
-    }
-    if (selectedYear) {
-      filtrosInfo.push(`Ano: ${selectedYear}`)
-    }
-    if (selectedMonth) {
-      const meses = ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
-                     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
-      filtrosInfo.push(`Mês: ${meses[selectedMonth]}`)
     }
     if (drillDown) {
       filtrosInfo.push(`Capítulo: ${drillDown.capitulo_cod} - ${drillDown.capitulo_nome}`)
@@ -163,31 +144,30 @@ export function ObitosCidCapPage({
           </p>
         </div>
 
+        {/* Informação do Período dos Dados */}
+        {periodoDados && periodoDados.ano_inicio && periodoDados.ano_fim && (
+          <div className="page-periodo-info">
+            <i className="fas fa-calendar-alt"></i>
+            <span>Dados referentes ao período: <strong>{periodoDados.ano_inicio} a {periodoDados.ano_fim}</strong></span>
+          </div>
+        )}
+
         {/* Filtros */}
         <ChartFilters 
           onApplyFilters={(filters) => {
             if (filters.municipio !== undefined) {
               setSelectedMunicipio(filters.municipio)
             }
-            if (filters.year !== undefined) {
-              setSelectedYear(filters.year)
-            }
-            if (filters.month !== undefined) {
-              setSelectedMonth(filters.month)
-            }
-            setTimeout(() => {
-              aplicarFiltros()
-            }, 100)
+            const municipioToApply = filters.municipio !== undefined ? filters.municipio : selectedMunicipio
+            console.log('Aplicando com municipio:', municipioToApply)
+            aplicarFiltros(municipioToApply)
           }}
-          showPeriod={true}
+          showPeriod={false}
           showYearRange={false}
-          showMonthYear={true}
+          showMonthYear={false}
           showMunicipio={true}
           localidades={localidades}
           initialMunicipio={selectedMunicipio}
-          initialYear={selectedYear}
-          initialMonth={selectedMonth}
-          maxAvailableYear={periodoDados?.ano_fim || null}
         />
 
         {/* Cards de Estatísticas Resumidas */}

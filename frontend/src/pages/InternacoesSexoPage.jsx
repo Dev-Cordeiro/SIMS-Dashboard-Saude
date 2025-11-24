@@ -60,17 +60,30 @@ export function InternacoesSexoPage({
     }
   }, [])
 
-  const aplicarFiltros = async () => {
+  const aplicarFiltros = async (municipioId = null) => {
     setLoading(true)
-    // Limpar resultados anteriores antes de aplicar novos filtros
     setInternacoesSexo([])
     try {
-      if (selectedMunicipio !== 'all') {
-        const params = { params: { id_localidade: selectedMunicipio } }
+      let municipioToUse
+      if (municipioId !== null && municipioId !== undefined) {
+        municipioToUse = municipioId
+      } else {
+        municipioToUse = selectedMunicipio
+      }
+      
+      const isAll = municipioToUse === 'all' || municipioToUse === null || municipioToUse === undefined
+      
+      if (!isAll) {
+        const municipioIdNum = typeof municipioToUse === 'number' ? municipioToUse : Number(municipioToUse)
+        if (isNaN(municipioIdNum)) {
+          setInternacoesSexo([])
+          return
+        }
+        const params = { params: { id_localidade: municipioIdNum } }
         const res = await api.get('/api/internacoes/sexo', params)
         setInternacoesSexo(res.data || [])
       } else {
-        setInternacoesSexo(dadosCompletos)
+        setInternacoesSexo(dadosCompletos.length > 0 ? dadosCompletos : [])
       }
     } catch (error) {
       setInternacoesSexo([])
@@ -133,17 +146,24 @@ export function InternacoesSexoPage({
           </p>
         </div>
 
+        {/* Informação do Período dos Dados */}
+        {periodoDados && periodoDados.ano_inicio && periodoDados.ano_fim && (
+          <div className="page-periodo-info">
+            <i className="fas fa-calendar-alt"></i>
+            <span>Dados referentes ao período: <strong>{periodoDados.ano_inicio} a {periodoDados.ano_fim}</strong></span>
+          </div>
+        )}
+
         {/* Filtros */}
         <ChartFilters 
           onApplyFilters={(filters) => {
             if (filters.municipio !== undefined) {
               setSelectedMunicipio(filters.municipio)
             }
-            setTimeout(() => {
-              aplicarFiltros()
-            }, 100)
+            const municipioToApply = filters.municipio !== undefined ? filters.municipio : selectedMunicipio
+            aplicarFiltros(municipioToApply)
           }}
-          showPeriod={true}
+          showPeriod={false}
           showYearRange={false}
           showMunicipio={true}
           localidades={localidades}
