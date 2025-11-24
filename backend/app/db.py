@@ -12,9 +12,7 @@ def get_connection():
         raise RuntimeError("DATABASE_URL não definida no .env")
     conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
     with conn.cursor() as cur:
-        # Aumentado timeout para queries pesadas com índices
         cur.execute("SET statement_timeout = '600s'")
-        # Otimizações adicionais
         cur.execute("SET work_mem = '256MB'")
         cur.execute("SET maintenance_work_mem = '512MB'")
     return conn
