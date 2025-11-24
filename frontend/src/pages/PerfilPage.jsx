@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { toast } from 'react-toastify'
 
-export function PerfilPage({ user: userProp }) {
+export function PerfilPage({ user: userProp, onCancel }) {
   const { user: authUser, updateProfile } = useAuth()
   const user = userProp || authUser
   
@@ -132,7 +132,17 @@ export function PerfilPage({ user: userProp }) {
             </div>
 
             <div className="form-actions">
-              <button type="button" className="btn-secondary" onClick={() => window.history.back()}>
+              <button 
+                type="button" 
+                className="btn-secondary" 
+                onClick={() => {
+                  if (onCancel) {
+                    onCancel()
+                  } else {
+                    window.history.back()
+                  }
+                }}
+              >
                 Cancelar
               </button>
               <button type="submit" className="btn-primary" disabled={loading}>

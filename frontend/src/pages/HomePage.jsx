@@ -4,6 +4,7 @@ import { BrasilMapReal } from '../components/BrasilMapReal'
 import { InternacoesCid10HomeChart } from '../components/InternacoesCid10HomeChart'
 import { ObitosPorCidCapChart } from '../components/ObitosPorCidCapChart'
 import { formatNumber } from '../utils/formatNumber'
+import { Modal } from '../components/Modal'
 
 export function HomePage({
   seriesMensal,
@@ -12,7 +13,9 @@ export function HomePage({
   internacoesCid,
   obitosCid,
   loading,
-  periodoDados
+  periodoDados,
+  isRefreshing,
+  onRefresh
 }) {
   const [drillDown, setDrillDown] = useState(null)
   
@@ -56,38 +59,26 @@ export function HomePage({
           <span className="breadcrumb-separator">/</span>
           <span className="breadcrumb-item active">Dashboard</span>
         </div>
-        {periodoDados && (
-          <div className="periodo-info">
-            <i className="fas fa-calendar-alt"></i>
-            <span className="periodo-label">Período dos dados:</span>
-            <span className="periodo-value">{formatarPeriodo()}</span>
-          </div>
-        )}
-      </div>
-      
-      {/* Breadcrumb do drill-down */}
-      {drillDown && (
-        <div className="breadcrumbs">
-          <span className="breadcrumb-item">Páginas</span>
-          <span className="breadcrumb-separator">/</span>
-          <span className="breadcrumb-item">Dashboard</span>
-          <span className="breadcrumb-separator">/</span>
-          <span className="breadcrumb-item">
-            {drillDown.type === 'sexo' 
-              ? `Sexo: ${drillDown.value}` 
-              : drillDown.type === 'cid-internacoes' || drillDown.type === 'cid-obitos'
-              ? `CID-10: ${drillDown.value}`
-              : `Período: ${drillDown.value}`}
-          </span>
-          <button 
-            className="breadcrumb-back"
-            onClick={() => setDrillDown(null)}
-            title="Voltar"
-          >
-            <i className="fas fa-arrow-left"></i> Voltar
-          </button>
+        <div className="home-header-right">
+          {periodoDados && (
+            <div className="periodo-info">
+              <i className="fas fa-calendar-alt"></i>
+              <span className="periodo-label">Período dos dados:</span>
+              <span className="periodo-value">{formatarPeriodo()}</span>
+            </div>
+          )}
+          {onRefresh && (
+            <button 
+              className={`refresh-data-button ${isRefreshing ? 'refreshing' : ''}`}
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              title="Atualizar dados"
+            >
+              <i className={`fas ${isRefreshing ? 'fa-sync-alt' : 'fa-sync'}`}></i>
+            </button>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Cards de Métricas - Foco em CID-10 */}
       <div className="stats-grid">
@@ -148,11 +139,7 @@ export function HomePage({
               <div className="chart-card">
                 <div className="chart-header">
                   <div>
-                    <h3 className="chart-title">
-                      {drillDown?.type === 'cid-internacoes' 
-                        ? `Detalhes: ${drillDown.value}` 
-                        : 'Top 10 - Internações por Capítulo CID-10'}
-                    </h3>
+                    <h3 className="chart-title">Top 10 - Internações por Capítulo CID-10</h3>
                     {periodoDados && (
                       <div className="chart-periodo">
                         <i className="fas fa-calendar"></i>
@@ -161,57 +148,30 @@ export function HomePage({
                     )}
                   </div>
                   <span className="chart-badge">
-                    {drillDown?.type === 'cid-internacoes' 
-                      ? 'Detalhamento' 
-                      : `${internacoesCid.length} capítulos`}
+                    {internacoesCid.length} capítulos
                   </span>
                 </div>
-                {drillDown?.type === 'cid-internacoes' ? (
-                  <div className="drill-down-details">
-                    <div className="drill-down-stats">
-                      <div className="drill-down-stat">
-                        <span className="drill-down-label">Capítulo:</span>
-                        <span className="drill-down-value">{drillDown.value}</span>
-                      </div>
-                      <div className="drill-down-stat">
-                        <span className="drill-down-label">Total de Internações:</span>
-                        <span className="drill-down-value">
-                          {drillDown.data.reduce((sum, item) => sum + (item.total_internacoes || 0), 0).toLocaleString('pt-BR')}
-                        </span>
-                      </div>
-                      <div className="drill-down-info">
-                        <p>Detalhes do capítulo CID-10 selecionado: <strong>{drillDown.value}</strong></p>
-                        <p>Clique em "Voltar" no breadcrumb para ver todos os capítulos novamente.</p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <InternacoesCid10HomeChart 
-                    data={internacoesCid}
-                    onBarClick={(data) => {
-                      if (data && data.capitulo_cod) {
-                        const filteredData = internacoesCid.filter(item => item.capitulo_cod === data.capitulo_cod)
-                        setDrillDown({
-                          type: 'cid-internacoes',
-                          value: `${data.capitulo_cod} - ${data.capitulo_nome}`,
-                          data: filteredData,
-                          originalData: internacoesCid
-                        })
-                      }
-                    }}
-                  />
-                )}
+                <InternacoesCid10HomeChart 
+                  data={internacoesCid}
+                  onBarClick={(data) => {
+                    if (data && data.capitulo_cod) {
+                      const filteredData = internacoesCid.filter(item => item.capitulo_cod === data.capitulo_cod)
+                      setDrillDown({
+                        type: 'cid-internacoes',
+                        value: `${data.capitulo_cod} - ${data.capitulo_nome}`,
+                        data: filteredData,
+                        originalData: internacoesCid
+                      })
+                    }
+                  }}
+                />
               </div>
 
               {/* Gráfico de Óbitos por CID-10 */}
               <div className="chart-card">
                 <div className="chart-header">
                   <div>
-                    <h3 className="chart-title">
-                      {drillDown?.type === 'cid-obitos' 
-                        ? `Detalhes: ${drillDown.value}` 
-                        : 'Top 10 - Óbitos por Capítulo CID-10'}
-                    </h3>
+                    <h3 className="chart-title">Top 10 - Óbitos por Capítulo CID-10</h3>
                     {periodoDados && (
                       <div className="chart-periodo">
                         <i className="fas fa-calendar"></i>
@@ -220,54 +180,71 @@ export function HomePage({
                     )}
                   </div>
                   <span className="chart-badge">
-                    {drillDown?.type === 'cid-obitos' 
-                      ? 'Detalhamento' 
-                      : `${obitosCid.length} capítulos`}
+                    {obitosCid.length} capítulos
                   </span>
                 </div>
-                {drillDown?.type === 'cid-obitos' ? (
-                  <div className="drill-down-details">
-                    <div className="drill-down-stats">
-                      <div className="drill-down-stat">
-                        <span className="drill-down-label">Capítulo:</span>
-                        <span className="drill-down-value">{drillDown.value}</span>
-                      </div>
-                      <div className="drill-down-stat">
-                        <span className="drill-down-label">Total de Óbitos:</span>
-                        <span className="drill-down-value">
-                          {drillDown.data.reduce((sum, item) => sum + (item.total_obitos || 0), 0).toLocaleString('pt-BR')}
-                        </span>
-                      </div>
-                      <div className="drill-down-info">
-                        <p>Detalhes do capítulo CID-10 selecionado: <strong>{drillDown.value}</strong></p>
-                        <p>Clique em "Voltar" no breadcrumb para ver todos os capítulos novamente.</p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ flex: 1, minHeight: 0, display: 'block' }}>
-                    <ObitosPorCidCapChart 
-                      data={obitosCid.slice(0, 10)}
-                      isHome={true}
-                      onBarClick={(data) => {
-                        if (data && data.capitulo_cod) {
-                          const filteredData = obitosCid.filter(item => item.capitulo_cod === data.capitulo_cod)
-                          setDrillDown({
-                            type: 'cid-obitos',
-                            value: `${data.capitulo_cod} - ${data.capitulo_nome}`,
-                            data: filteredData,
-                            originalData: obitosCid
-                          })
-                        }
-                      }}
-                    />
-                  </div>
-                )}
+                <div style={{ flex: 1, minHeight: 0, display: 'block' }}>
+                  <ObitosPorCidCapChart 
+                    data={obitosCid.slice(0, 10)}
+                    isHome={true}
+                    onBarClick={(data) => {
+                      if (data && data.capitulo_cod) {
+                        const filteredData = obitosCid.filter(item => item.capitulo_cod === data.capitulo_cod)
+                        setDrillDown({
+                          type: 'cid-obitos',
+                          value: `${data.capitulo_cod} - ${data.capitulo_nome}`,
+                          data: filteredData,
+                          originalData: obitosCid
+                        })
+                      }
+                    }}
+                  />
+                </div>
               </div>
             </div>
           </div>
         </>
       )}
+
+      {/* Modal para detalhes do drill-down */}
+      <Modal
+        isOpen={drillDown !== null}
+        onClose={() => setDrillDown(null)}
+        title={drillDown?.type === 'cid-internacoes' 
+          ? `Detalhes: ${drillDown?.value}` 
+          : drillDown?.type === 'cid-obitos'
+          ? `Detalhes: ${drillDown?.value}`
+          : 'Detalhes'}
+      >
+        {drillDown && (
+          <div className="drill-down-stats">
+            <div className="drill-down-stat">
+              <span className="drill-down-label">Capítulo:</span>
+              <span className="drill-down-value">{drillDown.value}</span>
+            </div>
+            {drillDown.type === 'cid-internacoes' && (
+              <div className="drill-down-stat">
+                <span className="drill-down-label">Total de Internações:</span>
+                <span className="drill-down-value">
+                  {drillDown.data.reduce((sum, item) => sum + (item.total_internacoes || 0), 0).toLocaleString('pt-BR')}
+                </span>
+              </div>
+            )}
+            {drillDown.type === 'cid-obitos' && (
+              <div className="drill-down-stat">
+                <span className="drill-down-label">Total de Óbitos:</span>
+                <span className="drill-down-value">
+                  {drillDown.data.reduce((sum, item) => sum + (item.total_obitos || 0), 0).toLocaleString('pt-BR')}
+                </span>
+              </div>
+            )}
+            <div className="drill-down-info">
+              <p>Detalhes do capítulo CID-10 selecionado: <strong>{drillDown.value}</strong></p>
+              <p>Os dados são agregados para todo o período selecionado.</p>
+            </div>
+          </div>
+        )}
+      </Modal>
     </>
   )
 }

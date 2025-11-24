@@ -1,16 +1,23 @@
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { Logo } from './Logo'
+import { Modal } from './Modal'
+import { toast } from 'react-toastify'
 import './Header.css'
 
 export function Header({ onMenuClick, onRefresh, isRefreshing }) {
   const { user, logout } = useAuth()
   const [searchValue, setSearchValue] = useState('')
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
 
   const handleLogout = () => {
-    if (window.confirm('Deseja realmente sair?')) {
-      logout()
-    }
+    setShowLogoutModal(true)
+  }
+
+  const confirmLogout = () => {
+    logout()
+    setShowLogoutModal(false)
+    toast.success('Logout realizado com sucesso!')
   }
 
   return (
@@ -69,6 +76,69 @@ export function Header({ onMenuClick, onRefresh, isRefreshing }) {
           </button>
         </div>
       </div>
+
+      {/* Modal de confirmação de logout */}
+      <Modal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        title="Confirmar Saída"
+      >
+        <div style={{ padding: '8px 0' }}>
+          <p style={{ marginBottom: '24px', fontSize: '15px', color: '#475569', lineHeight: '1.6' }}>
+            Tem certeza que deseja sair da sua conta?
+          </p>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+            <button
+              onClick={() => setShowLogoutModal(false)}
+              style={{
+                padding: '10px 20px',
+                background: '#f1f5f9',
+                border: '2px solid #e2e8f0',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: 600,
+                color: '#475569',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = '#e2e8f0'
+                e.target.style.borderColor = '#cbd5e1'
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = '#f1f5f9'
+                e.target.style.borderColor = '#e2e8f0'
+              }}
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={confirmLogout}
+              style={{
+                padding: '10px 20px',
+                background: '#14b8a6',
+                border: '2px solid #14b8a6',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: 600,
+                color: 'white',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = '#0d9488'
+                e.target.style.borderColor = '#0d9488'
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = '#14b8a6'
+                e.target.style.borderColor = '#14b8a6'
+              }}
+            >
+              Sair
+            </button>
+          </div>
+        </div>
+      </Modal>
     </header>
   )
 }

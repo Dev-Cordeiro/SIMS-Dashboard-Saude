@@ -4,6 +4,7 @@ import { exportChartAsPNG, exportDataAsCSV } from '../utils/exportChart'
 import { formatNumber } from '../utils/formatNumber'
 import { ChartFilters } from '../components/ChartFilters'
 import { api } from '../services/api'
+import { Modal } from '../components/Modal'
 import './ObitosCidCapPage.css'
 
 export function ObitosCidCapPage({
@@ -124,21 +125,6 @@ export function ObitosCidCapPage({
         <span className="breadcrumb-item">Páginas</span>
         <span className="breadcrumb-separator">/</span>
         <span className="breadcrumb-item active">Óbitos por Capítulo CID-10</span>
-        {drillDown && (
-          <>
-            <span className="breadcrumb-separator">/</span>
-            <span className="breadcrumb-item">
-              {drillDown.capitulo_cod} - {drillDown.capitulo_nome}
-            </span>
-            <button 
-              className="breadcrumb-back"
-              onClick={() => setDrillDown(null)}
-              title="Voltar"
-            >
-              <i className="fas fa-arrow-left"></i> Voltar
-            </button>
-          </>
-        )}
       </div>
 
       <div className="page-layout">
@@ -239,18 +225,11 @@ export function ObitosCidCapPage({
 
         {!loading && (
           <div className="page-chart-container" ref={chartRef}>
-          <div className="chart-header">
-            <div>
-              <h3 className="chart-title">
-                {drillDown 
-                  ? `Detalhes: ${drillDown.capitulo_cod} - ${drillDown.capitulo_nome}`
-                  : 'Top 10 capítulos da CID-10 - Óbitos'}
-              </h3>
-              <span className="chart-badge">
-                {drillDown ? 'Detalhamento' : 'Período agregado'}
-              </span>
-            </div>
-            {!drillDown && (
+            <div className="chart-header">
+              <div>
+                <h3 className="chart-title">Top 10 capítulos da CID-10 - Óbitos</h3>
+                <span className="chart-badge">Período agregado</span>
+              </div>
               <div className="chart-actions">
                 <button
                   className="export-button"
@@ -269,72 +248,75 @@ export function ObitosCidCapPage({
                   <span>CSV</span>
                 </button>
               </div>
-            )}
-          </div>
-          {!obitosCid || obitosCid.length === 0 ? (
-            <div style={{ 
-              width: '100%', 
-              height: 360, 
-              display: 'flex', 
-              flexDirection: 'column',
-              alignItems: 'center', 
-              justifyContent: 'center',
-              color: '#64748b',
-              fontSize: '16px',
-              gap: '12px'
-            }}>
-              <i className="fas fa-info-circle" style={{ fontSize: '48px', color: '#cbd5e1' }}></i>
-              <p>Nenhum dado disponível para exibir</p>
-              <p style={{ fontSize: '14px', color: '#94a3b8' }}>
-                Verifique se há dados disponíveis
-              </p>
             </div>
-          ) : drillDown ? (
-            <div className="drill-down-details">
-              <div className="drill-down-stats">
-                <div className="drill-down-stat">
-                  <span className="drill-down-label">Capítulo CID-10:</span>
-                  <span className="drill-down-value">
-                    {drillDown.capitulo_cod} - {drillDown.capitulo_nome}
-                  </span>
-                </div>
-                <div className="drill-down-stat">
-                  <span className="drill-down-label">Total de Óbitos:</span>
-                  <span className="drill-down-value">
-                    {formatNumber(drillDown.total_obitos || 0)}
-                  </span>
-                </div>
-                <div className="drill-down-info">
-                  <p>
-                    <strong>Informações do Capítulo:</strong>
-                  </p>
-                  <p>
-                    Este capítulo da CID-10 representa <strong>{formatNumber(drillDown.total_obitos || 0)}</strong> óbitos.
-                  </p>
-                  <p>
-                    Os dados são agregados para todo o período selecionado, não havendo granularidade temporal individual.
-                  </p>
-                  <p style={{ marginTop: '12px', fontStyle: 'italic', color: '#64748b' }}>
-                    Clique em "Voltar" no breadcrumb para ver todos os capítulos novamente.
-                  </p>
-                </div>
+            {!obitosCid || obitosCid.length === 0 ? (
+              <div style={{ 
+                width: '100%', 
+                height: 360, 
+                display: 'flex', 
+                flexDirection: 'column',
+                alignItems: 'center', 
+                justifyContent: 'center',
+                color: '#64748b',
+                fontSize: '16px',
+                gap: '12px'
+              }}>
+                <i className="fas fa-info-circle" style={{ fontSize: '48px', color: '#cbd5e1' }}></i>
+                <p>Nenhum dado disponível para exibir</p>
+                <p style={{ fontSize: '14px', color: '#94a3b8' }}>
+                  Verifique se há dados disponíveis
+                </p>
               </div>
-            </div>
-          ) : (
-            <div style={{ flex: 1, minHeight: 0, display: 'block' }}>
-              <ObitosPorCidCapChart 
-                data={obitosCid}
-                onBarClick={(data) => {
-                  if (data) {
-                    setDrillDown(data)
-                  }
-                }}
-              />
-            </div>
-          )}
+            ) : (
+              <div style={{ flex: 1, minHeight: 0, display: 'block' }}>
+                <ObitosPorCidCapChart 
+                  data={obitosCid}
+                  onBarClick={(data) => {
+                    if (data) {
+                      setDrillDown(data)
+                    }
+                  }}
+                />
+              </div>
+            )}
           </div>
         )}
       </div>
+
+      {/* Modal para detalhes do drill-down */}
+      <Modal
+        isOpen={drillDown !== null}
+        onClose={() => setDrillDown(null)}
+        title={drillDown ? `Detalhes: ${drillDown.capitulo_cod} - ${drillDown.capitulo_nome}` : 'Detalhes'}
+      >
+        {drillDown && (
+          <div className="drill-down-stats">
+            <div className="drill-down-stat">
+              <span className="drill-down-label">Capítulo CID-10:</span>
+              <span className="drill-down-value">
+                {drillDown.capitulo_cod} - {drillDown.capitulo_nome}
+              </span>
+            </div>
+            <div className="drill-down-stat">
+              <span className="drill-down-label">Total de Óbitos:</span>
+              <span className="drill-down-value">
+                {formatNumber(drillDown.total_obitos || 0)}
+              </span>
+            </div>
+            <div className="drill-down-info">
+              <p>
+                <strong>Informações do Capítulo:</strong>
+              </p>
+              <p>
+                Este capítulo da CID-10 representa <strong>{formatNumber(drillDown.total_obitos || 0)}</strong> óbitos.
+              </p>
+              <p>
+                Os dados são agregados para todo o período selecionado, não havendo granularidade temporal individual.
+              </p>
+            </div>
+          </div>
+        )}
+      </Modal>
     </>
   )
 }

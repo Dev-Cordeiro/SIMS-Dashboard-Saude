@@ -43,6 +43,13 @@
     width: 100% !important;
   }
   
+  .app-header-actions {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 997;
+  }
+  
   .mobile-menu-button {
     position: fixed;
     top: 16px;
@@ -78,11 +85,25 @@
   }
 }
 
-.refresh-data-button {
-  position: fixed;
-  top: 16px;
+.app-header-actions {
+  position: absolute;
+  top: 70px;
   right: 16px;
   z-index: 997;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .app-header-actions {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+  }
+}
+
+.refresh-data-button {
   background: white;
   border: 2px solid #e2e8f0;
   border-radius: 8px;
@@ -100,6 +121,7 @@
 
 .refresh-data-button i {
   font-size: 18px;
+  transition: transform 0.2s;
 }
 
 .refresh-data-button:hover {
@@ -110,12 +132,16 @@
   box-shadow: 0 4px 12px rgba(20, 184, 166, 0.2);
 }
 
+.refresh-data-button:hover i {
+  transform: none;
+}
+
 .refresh-data-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.refresh-data-button.refreshing {
+.refresh-data-button.refreshing i {
   animation: spin 1s linear infinite;
 }
 
@@ -151,6 +177,13 @@
   gap: 12px;
 }
 
+.home-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .periodo-info {
   display: flex;
   align-items: center;
@@ -162,6 +195,13 @@
   font-size: 13px;
   font-weight: 600;
   box-shadow: 0 2px 8px rgba(14, 165, 233, 0.2);
+}
+
+.home-header-right .refresh-data-button {
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  flex-shrink: 0;
 }
 
 .periodo-info i {
@@ -223,10 +263,13 @@
 /* Drill-down Styles */
 .drill-down-details {
   padding: 20px;
-  min-height: 280px;
+  min-height: 200px;
+  max-height: 400px;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 
 .drill-down-stats {
@@ -238,10 +281,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
+  padding: 12px 16px;
   background: linear-gradient(135deg, #f0fdfa 0%, #e0f2fe 100%);
   border-radius: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   border: 2px solid #14b8a6;
 }
 
@@ -342,9 +385,23 @@
   min-height: 520px;
   max-height: 580px;
   padding: 20px;
-  overflow: hidden;
+  overflow: visible;
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border: 1px solid #e2e8f0;
+}
+
+.dashboard-map-section .chart-card .brasil-map-real-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: visible;
+}
+
+.dashboard-map-section .chart-card .map-wrapper-real {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
 }
 
 .dashboard-map-section .brasil-map-container {
@@ -374,6 +431,11 @@
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border: 1px solid #e2e8f0;
   transition: all 0.3s ease;
+}
+
+.dashboard-charts-section .chart-card:has(.drill-down-details) {
+  max-height: 400px;
+  overflow-y: auto;
 }
 
 .dashboard-charts-section .chart-card:hover {
@@ -487,6 +549,7 @@
 .chart-actions {
   display: flex;
   gap: 8px;
+  flex-wrap: nowrap;
 }
 
 .export-button {
@@ -502,6 +565,8 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .export-button:hover {
@@ -1223,6 +1288,7 @@
 .chart-actions {
   display: flex;
   gap: 8px;
+  flex-wrap: nowrap;
 }
 
 .export-button {
@@ -1238,6 +1304,8 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .export-button:hover {

@@ -197,6 +197,10 @@ async def signup(data: SignUpRequest):
     Endpoint de cadastro usando Supabase Auth.
     """
     try:
+        import os
+        frontend_url = os.getenv("FRONTEND_URL", "https://sims-dashboard-saude.vercel.app")
+        redirect_url = f"{frontend_url}/"
+        
         response = supabase.auth.sign_up({
             "email": data.email,
             "password": data.password,
@@ -204,7 +208,7 @@ async def signup(data: SignUpRequest):
                 "data": {
                     "name": data.name or data.email.split("@")[0]
                 },
-                "email_redirect_to": None
+                "email_redirect_to": redirect_url
             }
         })
         

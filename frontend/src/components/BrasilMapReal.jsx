@@ -25,15 +25,57 @@ export function BrasilMapReal({ internacoesCid = [] }) {
 
   useEffect(() => {
     async function carregarGeoJSON() {
+      const cacheKey = 'brasil_geojson_cache'
+      const cacheTimestampKey = 'brasil_geojson_cache_timestamp'
+      const cacheExpiry = 30 * 24 * 60 * 60 * 1000
+
+      const cachedData = localStorage.getItem(cacheKey)
+      const cachedTimestamp = localStorage.getItem(cacheTimestampKey)
+      
+      if (cachedData) {
+        try {
+          const parsed = JSON.parse(cachedData)
+          if (cachedTimestamp) {
+            const cacheAge = Date.now() - parseInt(cachedTimestamp, 10)
+            if (cacheAge < cacheExpiry) {
+              setGeoJsonData(parsed)
+              return
+            }
+          } else {
+            setGeoJsonData(parsed)
+            return
+          }
+        } catch (e) {
+          localStorage.removeItem(cacheKey)
+          localStorage.removeItem(cacheTimestampKey)
+        }
+      }
+
       try {
-        const response = await fetch('https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/brazil-states.geojson')
+        const response = await fetch('https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/brazil-states.geojson', {
+          headers: {
+            'Accept': 'application/json'
+          }
+        })
+        
         if (response.ok) {
           const data = await response.json()
+          localStorage.setItem(cacheKey, JSON.stringify(data))
+          localStorage.setItem(cacheTimestampKey, Date.now().toString())
           setGeoJsonData(data)
         } else {
-          throw new Error('Não foi possível carregar GeoJSON')
+          throw new Error(`HTTP ${response.status}`)
         }
       } catch (error) {
+        if (cachedData) {
+          try {
+            const parsed = JSON.parse(cachedData)
+            setGeoJsonData(parsed)
+            return
+          } catch (e) {
+          }
+        }
+        
         setGeoJsonData({
           type: "FeatureCollection",
           features: [
@@ -127,11 +169,16 @@ export function BrasilMapReal({ internacoesCid = [] }) {
           zoom: 4,
           zoomControl: true,
           scrollWheelZoom: true,
+          maxBounds: [
+            [-35, -75],
+            [5, -30]
+          ],
+          maxBoundsViscosity: 1.0
         })
 
         const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-          maxZoom: 19,
+          maxZoom: 10,
           minZoom: 3
         })
         
@@ -143,7 +190,19 @@ export function BrasilMapReal({ internacoesCid = [] }) {
           if (mapInstanceRef.current) {
             mapInstanceRef.current.invalidateSize()
           }
+        }, 100)
+        
+        setTimeout(() => {
+          if (mapInstanceRef.current) {
+            mapInstanceRef.current.invalidateSize()
+          }
         }, 500)
+        
+        setTimeout(() => {
+          if (mapInstanceRef.current) {
+            mapInstanceRef.current.invalidateSize()
+          }
+        }, 1000)
 
       } catch (error) {
       }
@@ -155,7 +214,20 @@ export function BrasilMapReal({ internacoesCid = [] }) {
   }, [geoJsonData, loading])
 
   useEffect(() => {
+    const handleResize = () => {
+      if (mapInstanceRef.current) {
+        setTimeout(() => {
+          if (mapInstanceRef.current) {
+            mapInstanceRef.current.invalidateSize()
+          }
+        }, 100)
+      }
+    }
+
+    window.addEventListener('resize', handleResize)
+    
     return () => {
+      window.removeEventListener('resize', handleResize)
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove()
         mapInstanceRef.current = null
@@ -317,21 +389,46 @@ export function BrasilMapReal({ internacoesCid = [] }) {
     geoJsonLayer.addTo(mapInstanceRef.current)
     geoJsonLayerRef.current = geoJsonLayer
 
-    if (geoJsonLayer.getBounds().isValid()) {
-      mapInstanceRef.current.fitBounds(geoJsonLayer.getBounds(), { padding: [20, 20] })
-    } else {
-      const bounds = L.latLngBounds(
-        [-35, -75],
-        [5, -30]
-      )
-      mapInstanceRef.current.fitBounds(bounds, { padding: [20, 20] })
+    const fitMapBounds = () => {
+      if (!mapInstanceRef.current || !geoJsonLayer) return
+      
+      mapInstanceRef.current.invalidateSize()
+      
+      setTimeout(() => {
+        if (!mapInstanceRef.current || !geoJsonLayer) return
+        
+        const bounds = geoJsonLayer.getBounds()
+        if (bounds && bounds.isValid()) {
+          const containerWidth = mapRef.current?.offsetWidth || 600
+          const containerHeight = mapRef.current?.offsetHeight || 450
+          
+          const paddingX = Math.max(20, containerWidth * 0.05)
+          const paddingY = Math.max(20, containerHeight * 0.05)
+          
+          mapInstanceRef.current.fitBounds(bounds, { 
+            padding: [paddingY, paddingX],
+            maxZoom: 5,
+            animate: false
+          })
+        } else {
+          const defaultBounds = L.latLngBounds(
+            [-35, -75],
+            [5, -30]
+          )
+          mapInstanceRef.current.fitBounds(defaultBounds, { 
+            padding: [40, 40],
+            maxZoom: 5,
+            animate: false
+          })
+        }
+        
+        mapInstanceRef.current.invalidateSize()
+      }, 300)
     }
 
-    setTimeout(() => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.invalidateSize()
-      }
-    }, 100)
+    fitMapBounds()
+    setTimeout(fitMapBounds, 800)
+    setTimeout(fitMapBounds, 1500)
   }, [geoJsonData, estadosData])
 
   const cidOptions = [
@@ -407,7 +504,9 @@ export function BrasilMapReal({ internacoesCid = [] }) {
               height: '100%', 
               width: '100%',
               minHeight: '450px',
-              position: 'relative'
+              position: 'relative',
+              flex: 1,
+              display: 'block'
             }}
           >
             {!mapInstanceRef.current && (

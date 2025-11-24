@@ -8,7 +8,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  Brush,
 } from 'recharts'
 import { formatNumber, formatTooltipValue } from '../utils/formatNumber'
 
@@ -382,29 +381,6 @@ export function MonthlySeriesChart({ data, onDataPointClick }) {
             activeDot={{ r: 8, stroke: '#14b8a6', strokeWidth: 2, cursor: 'pointer' }}
             animationDuration={600}
           />
-          {totalDataPoints > 15 && (
-            <Brush
-              dataKey="ano_mes"
-              height={40}
-              stroke="#14b8a6"
-              fill="#e0f2fe"
-              startIndex={currentBrushStart}
-              endIndex={currentBrushEnd !== null ? currentBrushEnd : defaultBrushEnd}
-              onChange={handleBrushChange}
-              tickFormatter={(value) => {
-                if (value && typeof value === 'string' && value.includes('-')) {
-                  const parts = value.split('-')
-                  if (parts.length === 2) {
-                    return `${parts[0]}/${parts[1]}`
-                  }
-                }
-                return value
-              }}
-              style={{
-                cursor: 'grab'
-              }}
-            />
-          )}
         </LineChart>
       </ResponsiveContainer>
     </div>

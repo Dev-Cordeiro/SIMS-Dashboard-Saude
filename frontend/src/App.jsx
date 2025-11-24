@@ -202,6 +202,8 @@ function Dashboard() {
                   obitosCid={obitosCid}
                   loading={loading}
                   periodoDados={periodoDados}
+                  isRefreshing={isRefreshing}
+                  onRefresh={handleRefresh}
                 />
               )
       case 'serie-mensal':
@@ -261,7 +263,7 @@ function Dashboard() {
           />
         )
       case 'perfil':
-        return <PerfilPage user={user} />
+        return <PerfilPage user={user} onCancel={() => setCurrentPage('dashboard')} />
       default:
         return (
           <HomePage
@@ -292,14 +294,18 @@ function Dashboard() {
         >
           <i className="fas fa-bars"></i>
         </button>
-        <button 
-          className={`refresh-data-button ${isRefreshing ? 'refreshing' : ''}`}
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-          title="Atualizar dados"
-        >
-          <i className={`fas ${isRefreshing ? 'fa-sync-alt' : 'fa-sync'}`}></i>
-        </button>
+        {currentPage !== 'dashboard' && (
+          <div className="app-header-actions">
+            <button 
+              className={`refresh-data-button ${isRefreshing ? 'refreshing' : ''}`}
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              title="Atualizar dados"
+            >
+              <i className={`fas ${isRefreshing ? 'fa-sync-alt' : 'fa-sync'}`}></i>
+            </button>
+          </div>
+        )}
         <main className="app-content">
           {renderPage()}
         </main>
