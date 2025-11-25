@@ -126,20 +126,21 @@ export function AuthProvider({ children }) {
       const data = response.data
 
       if (data.success && data.profile) {
-        setUser({
+        const updatedUser = {
           ...user,
-          ...data.profile,
-        })
-        localStorage.setItem('user', JSON.stringify({
-          ...user,
-          ...data.profile,
-        }))
+          name: data.profile.name || user.email?.split('@')[0] || user.name,
+          phone: data.profile.phone || user.phone,
+          organization: data.profile.organization || user.organization,
+          bio: data.profile.bio || user.bio,
+        }
+        setUser(updatedUser)
+        localStorage.setItem('user', JSON.stringify(updatedUser))
         return { success: true, data: data.profile }
       }
 
-      return { success: false, error: 'Erro ao atualizar perfil' }
+      return { success: false, error: data.error || 'Erro ao atualizar perfil' }
     } catch (error) {
-      const errorMessage = error.response?.data?.detail || 'Erro ao atualizar perfil'
+      const errorMessage = error.response?.data?.detail || error.message || 'Erro ao atualizar perfil'
       return { success: false, error: errorMessage }
     }
   }

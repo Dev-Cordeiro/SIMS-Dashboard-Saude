@@ -173,10 +173,18 @@ async def login(credentials: LoginRequest):
         except Exception as e:
             pass
         
+        profile_name = None
+        if profile:
+            profile_name = profile.get("name")
+            if profile_name and profile_name.strip():
+                profile_name = profile_name.strip()
+            else:
+                profile_name = None
+        
         user_data = {
             "id": response.user.id,
             "email": response.user.email,
-            "name": profile.get("name") if profile else response.user.email.split("@")[0],
+            "name": profile_name if profile_name else response.user.email.split("@")[0],
             "phone": profile.get("phone") if profile else None,
             "organization": profile.get("organization") if profile else None,
         }
@@ -316,7 +324,17 @@ async def update_profile(profile_data: ProfileUpdate, current_user = Depends(get
         
         result = supabase.table("profiles").update(update_dict).eq("id", current_user.id).execute()
         
-        return {"success": True, "profile": result.data[0] if result.data else None}
+        if not result.data:
+            profile_data_dict = update_dict.copy()
+            profile_data_dict["id"] = current_user.id
+            profile_data_dict["email"] = current_user.email
+            if "name" not in profile_data_dict:
+                profile_data_dict["name"] = current_user.email.split("@")[0]
+            result = supabase.table("profiles").insert(profile_data_dict).execute()
+        
+        updated_profile = result.data[0] if result.data else None
+        
+        return {"success": True, "profile": updated_profile}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

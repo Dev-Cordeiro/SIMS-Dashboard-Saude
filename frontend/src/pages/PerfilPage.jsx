@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { toast } from 'react-toastify'
 import { Modal } from '../components/Modal'
@@ -8,7 +8,7 @@ export function PerfilPage({ user: userProp, onCancel }) {
   const user = userProp || authUser
   
   const [formData, setFormData] = useState({
-    name: user?.name || '',
+    name: user?.name || user?.email?.split('@')[0] || '',
     phone: user?.phone || '',
     organization: user?.organization || '',
     bio: user?.bio || '',
@@ -16,6 +16,20 @@ export function PerfilPage({ user: userProp, onCancel }) {
   const [loading, setLoading] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleting, setDeleting] = useState(false)
+
+  useEffect(() => {
+    if (user) {
+      const userName = user?.name && user.name !== user?.email?.split('@')[0] 
+        ? user.name 
+        : (user?.name || '')
+      setFormData({
+        name: userName,
+        phone: user?.phone || '',
+        organization: user?.organization || '',
+        bio: user?.bio || '',
+      })
+    }
+  }, [user])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -34,6 +48,15 @@ export function PerfilPage({ user: userProp, onCancel }) {
       
       if (result.success) {
         toast.success('Perfil atualizado com sucesso!')
+        if (result.data) {
+          setFormData(prev => ({
+            ...prev,
+            name: result.data.name || prev.name,
+            phone: result.data.phone || prev.phone,
+            organization: result.data.organization || prev.organization,
+            bio: result.data.bio || prev.bio,
+          }))
+        }
       } else {
         toast.error(result.error || 'Erro ao atualizar perfil')
       }

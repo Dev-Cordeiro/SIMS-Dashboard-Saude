@@ -103,10 +103,10 @@ export function Sidebar({ isOpen, setIsOpen, collapsed, setCollapsed, currentPag
               style={{ textDecoration: 'none', color: 'inherit' }}
             >
               <div className="user-avatar">
-                {user?.name?.charAt(0).toUpperCase() || 'U'}
+                {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
               </div>
               <div className="user-info">
-                <div className="user-name">{user?.name || 'Usuário'}</div>
+                <div className="user-name">{user?.name || user?.email?.split('@')[0] || 'Usuário'}</div>
                 <div className="user-email">{user?.email || ''}</div>
               </div>
             </a>
@@ -130,7 +130,7 @@ export function Sidebar({ isOpen, setIsOpen, collapsed, setCollapsed, currentPag
               style={{ textDecoration: 'none', color: 'inherit' }}
             >
               <div className="user-avatar">
-                {user?.name?.charAt(0).toUpperCase() || 'U'}
+                {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
               </div>
             </a>
             <button className="sidebar-logout-button-collapsed" onClick={handleLogout} title="Sair">
