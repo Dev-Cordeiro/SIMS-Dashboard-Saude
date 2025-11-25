@@ -9,7 +9,10 @@ import { api } from '../services/api'
 import { formatNumber } from '../utils/formatNumber'
 import './BrasilMapSimple.css'
 
+const GEOJSON_CACHE_KEY = 'brasil_geojson_cache'
+const GEOJSON_CACHE_EXPIRY = 24 * 60 * 60 * 1000
 const geoUrl = 'https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/brazil-states.geojson'
+const geoUrlAlternative = 'https://raw.githubusercontent.com/fititnt/gis-dataset-brasil/master/uf/geojson/uf.json'
 
 export function BrasilMapSimple({ internacoesCid = [] }) {
   const [estadosData, setEstadosData] = useState({})
@@ -19,6 +22,87 @@ export function BrasilMapSimple({ internacoesCid = [] }) {
   const [error, setError] = useState(null)
   const [selectedEstado, setSelectedEstado] = useState(null)
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 })
+  const [geographyData, setGeographyData] = useState(null)
+  const [geoLoading, setGeoLoading] = useState(true)
+
+  useEffect(() => {
+    async function carregarGeoJSON() {
+      try {
+        const cached = localStorage.getItem(GEOJSON_CACHE_KEY)
+        if (cached) {
+          const { data, timestamp } = JSON.parse(cached)
+          const now = Date.now()
+          if (now - timestamp < GEOJSON_CACHE_EXPIRY) {
+            setGeographyData(data)
+            setGeoLoading(false)
+            return
+          }
+        }
+
+        let response = await fetch(geoUrl, {
+          headers: {
+            'Accept': 'application/json',
+          },
+          cache: 'force-cache'
+        })
+
+        if (!response.ok) {
+          if (response.status === 429) {
+            response = await fetch(geoUrlAlternative, {
+              headers: {
+                'Accept': 'application/json',
+              },
+              cache: 'force-cache'
+            })
+            if (!response.ok && cached) {
+              const { data } = JSON.parse(cached)
+              setGeographyData(data)
+              setGeoLoading(false)
+              return
+            }
+            if (!response.ok) {
+              throw new Error('Muitas requisições. Usando cache se disponível.')
+            }
+          } else {
+            throw new Error(`Erro ao carregar mapa: ${response.status}`)
+          }
+        }
+
+        let data = await response.json()
+        
+        if (data.type === 'FeatureCollection' && data.features) {
+          data = data
+        } else if (Array.isArray(data)) {
+          data = {
+            type: 'FeatureCollection',
+            features: data
+          }
+        }
+        localStorage.setItem(GEOJSON_CACHE_KEY, JSON.stringify({
+          data,
+          timestamp: Date.now()
+        }))
+        setGeographyData(data)
+      } catch (error) {
+        console.error('Erro ao carregar GeoJSON:', error)
+        const cached = localStorage.getItem(GEOJSON_CACHE_KEY)
+        if (cached) {
+          try {
+            const { data } = JSON.parse(cached)
+            setGeographyData(data)
+          } catch (e) {
+            setError('Erro ao carregar mapa. Tente recarregar a página.')
+          }
+        } else {
+          setError('Erro ao carregar mapa. Tente recarregar a página.')
+        }
+      } finally {
+        setGeoLoading(false)
+      }
+    }
+
+    carregarGeoJSON()
+  }, [])
 
   useEffect(() => {
     async function carregarDadosEstados() {
@@ -57,7 +141,9 @@ export function BrasilMapSimple({ internacoesCid = [] }) {
         setEstadosData(dados)
         setError(null)
       } catch (error) {
-        if (error.code === 'ECONNABORTED') {
+        if (error.response?.status === 429) {
+          setError('Muitas requisições. Aguarde alguns instantes e tente novamente.')
+        } else if (error.code === 'ECONNABORTED') {
           setError('A requisição demorou muito para responder. Tente novamente.')
         } else {
           setError('Erro ao carregar dados do mapa. Tente novamente.')
@@ -68,8 +154,10 @@ export function BrasilMapSimple({ internacoesCid = [] }) {
       }
     }
 
-    carregarDadosEstados()
-  }, [selectedCid])
+    if (!geoLoading) {
+      carregarDadosEstados()
+    }
+  }, [selectedCid, geoLoading])
 
   const valoresComDados = Object.values(estadosData)
     .filter(d => d && d.totalInternacoes > 0)
@@ -79,15 +167,15 @@ export function BrasilMapSimple({ internacoesCid = [] }) {
   const getEstadoColor = (uf) => {
     const dados = estadosData[uf]
     if (!dados || dados.totalInternacoes === 0) {
-      return '#cbd5e1'
+      return '#e2e8f0'
     }
     
     const ratio = dados.totalInternacoes / maxValue
-    if (ratio > 0.7) return '#dc2626'  // Vermelho escuro
-    if (ratio > 0.5) return '#ef4444'  // Vermelho
-    if (ratio > 0.3) return '#f87171'   // Vermelho claro
-    if (ratio > 0.1) return '#fca5a5'  // Rosa
-    return '#fecaca'  // Rosa claro
+    if (ratio > 0.7) return '#991b1b'  // Vermelho muito escuro
+    if (ratio > 0.5) return '#dc2626'  // Vermelho escuro
+    if (ratio > 0.3) return '#ef4444'  // Vermelho
+    if (ratio > 0.1) return '#f87171'  // Vermelho claro
+    return '#fca5a5'  // Rosa
   }
 
   const getUF = (geography) => {
@@ -175,7 +263,9 @@ export function BrasilMapSimple({ internacoesCid = [] }) {
               projection="geoMercator"
               projectionConfig={{
                 center: [-55, -14],
-                scale: 600
+                scale: 680,
+                rotate: [0, 0, 0],
+                precision: 0.1
               }}
               style={{ 
                 width: '100%', 
@@ -185,9 +275,10 @@ export function BrasilMapSimple({ internacoesCid = [] }) {
               }}
             >
             <ZoomableGroup>
-              <Geographies geography={geoUrl}>
-                {({ geographies }) =>
-                  geographies.map((geo) => {
+              {geographyData ? (
+                <Geographies geography={geographyData}>
+                  {({ geographies }) =>
+                    geographies.map((geo) => {
                     const uf = getUF(geo)
                     const dados = estadosData[uf]
                     const hasData = dados && dados.totalInternacoes > 0
@@ -205,24 +296,32 @@ export function BrasilMapSimple({ internacoesCid = [] }) {
                           default: {
                             fill: fillColor,
                             stroke: '#ffffff',
-                            strokeWidth: hasData ? 2 : 1,
+                            strokeWidth: hasData ? 2.5 : 1.5,
                             outline: 'none',
-                            opacity: hasData ? 0.85 : 0.4
+                            opacity: hasData ? 0.9 : 0.5,
+                            filter: hasData ? 'drop-shadow(0px 2px 4px rgba(0,0,0,0.15))' : 'none',
+                            transition: 'all 0.3s ease'
                           },
                           hover: {
                             fill: hasData ? '#14b8a6' : fillColor,
                             stroke: '#ffffff',
-                            strokeWidth: hasData ? 3 : 1,
+                            strokeWidth: hasData ? 3.5 : 2,
                             outline: 'none',
                             cursor: hasData ? 'pointer' : 'default',
-                            opacity: hasData ? 0.9 : 0.5
+                            opacity: hasData ? 1 : 0.6,
+                            filter: hasData ? 'drop-shadow(0px 4px 8px rgba(0,0,0,0.25))' : 'none',
+                            transform: hasData ? 'scale(1.02)' : 'scale(1)',
+                            transition: 'all 0.3s ease'
                           },
                           pressed: {
                             fill: hasData ? '#0d9488' : fillColor,
                             stroke: '#ffffff',
-                            strokeWidth: hasData ? 3 : 1,
+                            strokeWidth: hasData ? 3.5 : 2,
                             outline: 'none',
-                            opacity: hasData ? 0.95 : 0.6
+                            opacity: hasData ? 1 : 0.7,
+                            filter: hasData ? 'drop-shadow(0px 2px 4px rgba(0,0,0,0.3))' : 'none',
+                            transform: hasData ? 'scale(0.98)' : 'scale(1)',
+                            transition: 'all 0.2s ease'
                           }
                         }}
                         onMouseEnter={() => {
@@ -257,7 +356,12 @@ export function BrasilMapSimple({ internacoesCid = [] }) {
                     )
                   })
                 }
-              </Geographies>
+                </Geographies>
+              ) : (
+                <div className="map-loading">
+                  <p>Carregando mapa...</p>
+                </div>
+              )}
             </ZoomableGroup>
           </ComposableMap>
           
