@@ -46,15 +46,6 @@ export function Sidebar({ isOpen, setIsOpen, collapsed, setCollapsed, currentPag
       {isOpen && <div className="sidebar-overlay" onClick={() => setIsOpen(false)} />}
       <aside className={`sidebar ${isOpen ? 'open' : ''} ${collapsed ? 'collapsed' : ''}`} data-collapsed={collapsed}>
         <div className="sidebar-header">
-          <div className="sidebar-logo-container">
-            {!collapsed && <Logo size={collapsed ? 32 : 32} />}
-            {!collapsed && (
-              <div className="sidebar-title-container">
-                <h2>SIMS</h2>
-                <p className="sidebar-subtitle">Sistema Integrado de Monitoramento em Saúde</p>
-              </div>
-            )}
-          </div>
           <button 
             className="sidebar-toggle" 
             onClick={() => setCollapsed(!collapsed)}
@@ -62,11 +53,15 @@ export function Sidebar({ isOpen, setIsOpen, collapsed, setCollapsed, currentPag
           >
             <i className={`fas ${collapsed ? 'fa-chevron-right' : 'fa-chevron-left'}`}></i>
           </button>
-          {isOpen && (
-            <button className="sidebar-close" onClick={() => setIsOpen(false)}>
-              <i className="fas fa-times"></i>
-            </button>
-          )}
+          <div className="sidebar-logo-container">
+            <Logo size={collapsed ? 70 : 64} />
+            {!collapsed && (
+              <div className="sidebar-title-container">
+                <h2>SIMS</h2>
+                <p className="sidebar-subtitle">Sistema Integrado de Monitoramento em Saúde</p>
+              </div>
+            )}
+          </div>
         </div>
 
 

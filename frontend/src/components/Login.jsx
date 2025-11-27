@@ -49,9 +49,13 @@ export function Login() {
       <div className="login-left">
         <div className="login-branding">
           <div className="logo-wrapper">
-            <Logo size={140} />
+            <img 
+              src="/logo.png" 
+              alt="SIMS" 
+              style={{ width: '200px', height: '200px', objectFit: 'contain' }}
+            />
+            <h1 className="brand-title">SIMS</h1>
           </div>
-          <h1 className="brand-title">SIMS</h1>
           <p className="brand-subtitle">
             Sistema Integrado de Monitoramento em Saúde
           </p>

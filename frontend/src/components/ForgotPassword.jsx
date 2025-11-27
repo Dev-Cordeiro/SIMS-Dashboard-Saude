@@ -47,7 +47,7 @@ export function ForgotPassword() {
       <div className="forgot-password-left">
         <div className="forgot-password-branding">
           <div className="logo-wrapper">
-            <Logo size={140} />
+            <Logo size={100} />
           </div>
           <h1 className="brand-title">SIMS</h1>
           <p className="brand-subtitle">
